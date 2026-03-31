@@ -1,0 +1,60 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/agent-core",
+    "crates/agent-tools",
+    "crates/agent-provider",
+    "crates/agent-permissions",
+    "crates/agent-tasks",
+    "crates/agent-compact",
+    "crates/agent-mcp",
+    "crates/tools-builtin",
+    "crates/claude-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.75"
+
+[workspace.dependencies]
+# Internal crates
+agent-core = { path = "crates/agent-core" }
+agent-tools = { path = "crates/agent-tools" }
+agent-provider = { path = "crates/agent-provider" }
+agent-permissions = { path = "crates/agent-permissions" }
+agent-tasks = { path = "crates/agent-tasks" }
+agent-compact = { path = "crates/agent-compact" }
+agent-mcp = { path = "crates/agent-mcp" }
+tools-builtin = { path = "crates/tools-builtin" }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+futures = "0.3"
+async-trait = "0.1"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# HTTP
+reqwest = { version = "0.12", features = ["json", "stream"] }
+reqwest-eventsource = "0.6"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utilities
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+bytes = "1"
