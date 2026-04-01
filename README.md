@@ -28,7 +28,6 @@
 - [Crate Overview](#-crate-overview)
 - [Rust vs TypeScript](#-rust-vs-typescript)
 - [Roadmap](#-roadmap)
-- [Project Structure](#-project-structure)
 - [Contributing](#-contributing)
 - [References](#-references)
 - [License](#-license)
@@ -252,108 +251,6 @@ Implements the most commonly used tools, prioritizing file operations, shell com
 
 > **Goal:** Not just a CLI, but a complete agent runtime that can be integrated into other systems.
 
-## 📁 Project Structure
-
-```text
-rust-clw/
-├── Cargo.toml                          # Workspace root — declares all crates and shared deps
-├── Cargo.lock
-├── crates/
-│   ├── claude-cli/                     # Binary entry point
-│   │   └── src/main.rs                 #   CLI args, REPL loop, provider/tool assembly
-│   │
-│   ├── agent-core/                     # Message model, session state, agent main loop
-│   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── message.rs              #   Role, ContentBlock, Message
-│   │       ├── session.rs              #   SessionConfig, SessionState
-│   │       ├── query.rs                #   Recursive agent loop (the "beating heart")
-│   │       └── error.rs                #   AgentError enum
-│   │
-│   ├── agent-tools/                    # Tool trait, registry, orchestrator
-│   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── tool.rs                 #   Tool trait, ToolOutput
-│   │       ├── registry.rs             #   ToolRegistry — name → impl lookup
-│   │       ├── orchestrator.rs         #   ToolOrchestrator — batch dispatch & permission
-│   │       └── context.rs              #   ToolContext — minimal deps injected into tools
-│   │
-│   ├── agent-provider/                 # Unified model provider abstraction
-│   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── provider.rs             #   ModelProvider trait (complete + stream)
-│   │       ├── request.rs              #   ModelRequest, RequestMessage, ToolDefinition
-│   │       ├── response.rs             #   ModelResponse, StreamEvent, StopReason, Usage
-│   │       ├── anthropic.rs            #   Anthropic API impl with SSE stream parsing
-│   │       └── openai_compat.rs        #   OpenAI-compatible impl (Ollama, vLLM, etc.)
-│   │
-│   ├── agent-permissions/              # Authorization layer
-│   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── types.rs                #   PermissionMode, ResourceKind, PermissionDecision
-│   │       ├── policy.rs               #   PermissionPolicy trait
-│   │       └── rules.rs                #   RuleBasedPolicy — glob/prefix rule matching
-│   │
-│   ├── agent-tasks/                    # Background task lifecycle
-│   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── task.rs                 #   Task trait, TaskState, TaskInfo, TaskNotification
-│   │       └── manager.rs              #   TaskManager — register, track, notify, cancel
-│   │
-│   ├── agent-compact/                  # Context compaction & token budget
-│   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── budget.rs               #   TokenBudget — window size, thresholds
-│   │       └── strategy.rs             #   CompactStrategy trait, TruncateStrategy
-│   │
-│   ├── agent-mcp/                      # MCP integration (Phase 3 placeholder)
-│   │   └── src/
-│   │       └── lib.rs                  #   McpServerConfig type stub
-│   │
-│   └── tools-builtin/                  # Built-in tool implementations
-│       └── src/
-│           ├── lib.rs                  #   register_builtin_tools()
-│           ├── bash.rs                 #   BashTool — shell command execution
-│           ├── file_read.rs            #   FileReadTool — read with optional line range
-│           └── file_write.rs           #   FileWriteTool — write with auto mkdir
-│
-├── docs/
-│   ├── assets/
-│   │   ├── overview.svg                # Project overview diagram
-│   │   ├── architecture.svg            # Architecture diagram
-│   │   └── roadmap.svg                 # Roadmap diagram
-│   └── i18n/
-│       ├── README.zh-CN.md             # 简体中文
-│       ├── README.ja.md                # 日本語
-│       ├── README.ko.md                # 한국어
-│       ├── README.es.md                # Español
-│       └── README.fr.md               # Français
-│
-├── ARCHITECTURE.zh-CN.md               # Architecture analysis of Claude Code (TS)
-├── CONTRIBUTION.md
-├── README.md                           # English documentation (root)
-└── LICENSE
-```
-
-### Dependency Graph
-
-```text
-claude-cli
- ├── agent-core
- │    ├── agent-tools
- │    │    ├── agent-permissions
- │    │    └── agent-provider
- │    ├── agent-provider
- │    ├── agent-permissions
- │    └── agent-compact
- ├── agent-tasks          (independent — no core dependency)
- ├── agent-compact
- ├── tools-builtin
- │    └── agent-tools
- └── agent-mcp            (Phase 3, currently standalone)
-```
-
-> `claude-cli` is the only binary crate; everything else is a library. Each `agent-*` crate is designed to be usable independently in other agent systems.
 
 ## 🤝 Contributing
 
@@ -365,12 +262,6 @@ Contributions are welcome! This project is in its early design phase, and there 
 - **Implementation** — Pick up crate implementation once designs stabilize
 
 Please feel free to open an issue or submit a pull request.
-
-## 📚 References
-
-- [ARCHITECTURE.zh-CN.md](./ARCHITECTURE.zh-CN.md) — Detailed teardown of Claude Code's TypeScript architecture
-- [Claude Code Official Docs](https://docs.anthropic.com/en/docs/claude-code)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
 
 ## 📄 License
 
