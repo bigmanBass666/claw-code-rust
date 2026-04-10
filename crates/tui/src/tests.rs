@@ -75,6 +75,7 @@ fn test_app() -> TuiApp {
         aux_panel: None,
         aux_panel_selection: 0,
         thinking_selection: None,
+        pending_tool_items: std::collections::HashMap::new(),
         last_ctrl_c_at: None,
         paste_burst: crate::paste_burst::PasteBurst::default(),
         should_quit: false,
@@ -96,6 +97,7 @@ async fn assistant_text_deltas_append_to_same_item() {
 async fn tool_results_create_separate_items() {
     let mut app = test_app();
     app.handle_worker_event(WorkerEvent::ToolResult {
+        tool_use_id: "tool-1".to_string(),
         preview: "done".to_string(),
         is_error: false,
         truncated: false,
@@ -107,7 +109,7 @@ async fn tool_results_create_separate_items() {
 }
 
 #[tokio::test]
-async fn tool_result_fold_progresses_to_three_line_compact_state() {
+async fn tool_result_fold_progresses_to_hidden_compact_state() {
     let mut item = TranscriptItem::new(
         TranscriptItemKind::ToolResult,
         "Tool output",
@@ -126,8 +128,12 @@ async fn tool_result_fold_progresses_to_three_line_compact_state() {
     let second = item.fold_next_at.expect("second fold deadline");
     assert!(item.advance_fold(second));
     assert_eq!(item.fold_stage, 2);
+
+    let third = item.fold_next_at.expect("third fold deadline");
+    assert!(item.advance_fold(third));
+    assert_eq!(item.fold_stage, 3);
     assert!(item.fold_next_at.is_none());
-    assert!(!item.advance_fold(second));
+    assert!(!item.advance_fold(third));
 }
 
 #[tokio::test]
@@ -559,7 +565,8 @@ async fn tool_call_breaks_assistant_stream_into_new_segment() {
     let mut app = test_app();
     app.handle_worker_event(WorkerEvent::TextDelta("before".to_string()));
     app.handle_worker_event(WorkerEvent::ToolCall {
-        summary: "Ran date".to_string(),
+        tool_use_id: "tool-1".to_string(),
+        summary: "bash: date".to_string(),
         detail: Some("{\n  \"command\": \"date\"\n}".to_string()),
     });
     app.handle_worker_event(WorkerEvent::TextDelta("after".to_string()));
@@ -568,11 +575,7 @@ async fn tool_call_breaks_assistant_stream_into_new_segment() {
         app.transcript,
         vec![
             TranscriptItem::new(TranscriptItemKind::Assistant, "Assistant", "before"),
-            TranscriptItem::new(
-                TranscriptItemKind::ToolCall,
-                "Ran date",
-                "{\n  \"command\": \"date\"\n}"
-            ),
+            TranscriptItem::new(TranscriptItemKind::ToolCall, "bash: date", ""),
             TranscriptItem::new(TranscriptItemKind::Assistant, "Assistant", "after"),
         ]
     );
@@ -585,6 +588,7 @@ async fn tool_result_readds_thinking_while_turn_is_still_busy() {
     app.pending_status_index = Some(app.push_item(TranscriptItemKind::System, "Thinking", ""));
 
     app.handle_worker_event(WorkerEvent::ToolResult {
+        tool_use_id: "tool-1".to_string(),
         preview: "2026-04-06 23:58:56".to_string(),
         is_error: false,
         truncated: false,
@@ -628,7 +632,7 @@ async fn transcript_area_tracks_content_height_when_short() {
 }
 
 #[tokio::test]
-async fn session_switched_event_updates_model_and_transcript() {
+async fn session_switched_event_keeps_current_model_and_restores_transcript() {
     let mut app = test_app();
 
     app.handle_worker_event(WorkerEvent::SessionSwitched {
@@ -645,7 +649,7 @@ async fn session_switched_event_updates_model_and_transcript() {
         loaded_item_count: 7,
     });
 
-    assert_eq!(app.model, "restored-model");
+    assert_eq!(app.model, "test-model");
     assert_eq!(app.total_input_tokens, 42);
     assert_eq!(app.total_output_tokens, 7);
     assert_eq!(app.transcript.len(), 1);

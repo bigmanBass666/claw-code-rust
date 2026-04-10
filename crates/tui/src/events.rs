@@ -3,6 +3,10 @@ use std::time::{Duration, Instant};
 use clawcr_core::{ProviderKind, SessionId};
 use ratatui::style::Color;
 
+const TOOL_RESULT_FOLD_INITIAL_DELAY_MS: u64 = 420;
+const TOOL_RESULT_FOLD_STEP_DELAY_MS: u64 = 90;
+const TOOL_RESULT_FOLD_FINAL_STAGE: u8 = 3;
+
 /// One thinking option shown in the interactive thinking picker.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ThinkingListEntry {
@@ -68,6 +72,8 @@ pub(crate) enum WorkerEvent {
     TextDelta(String),
     /// A tool call started.
     ToolCall {
+        /// Stable identifier used to match the later tool result.
+        tool_use_id: String,
         /// Human-readable summary line for the tool execution.
         summary: String,
         /// Optional structured input preview for the tool call.
@@ -75,6 +81,8 @@ pub(crate) enum WorkerEvent {
     },
     /// A tool call finished.
     ToolResult {
+        /// Stable identifier used to match the corresponding tool call.
+        tool_use_id: String,
         /// Human-readable output preview shown in the transcript.
         preview: String,
         /// Whether the tool returned an error.
@@ -185,10 +193,39 @@ impl TranscriptItem {
         }
     }
 
+    /// Creates a compact tool-call transcript item that only keeps the title row.
+    pub(crate) fn tool_call(title: impl Into<String>) -> Self {
+        Self::new(TranscriptItemKind::ToolCall, title, String::new())
+    }
+
+    /// Creates a successful tool-result item that briefly expands before compacting away.
+    pub(crate) fn live_tool_result(title: impl Into<String>, body: impl Into<String>) -> Self {
+        Self::new(TranscriptItemKind::ToolResult, title, body).with_tool_fold()
+    }
+
+    /// Creates a restored historical tool-result item in its already-compacted state.
+    pub(crate) fn restored_tool_result(title: impl Into<String>, body: impl Into<String>) -> Self {
+        Self::new(TranscriptItemKind::ToolResult, title, body)
+            .with_fold_stage(TOOL_RESULT_FOLD_FINAL_STAGE)
+    }
+
+    /// Creates a tool error item that stays expanded because errors should remain visible.
+    pub(crate) fn tool_error(title: impl Into<String>, body: impl Into<String>) -> Self {
+        Self::new(TranscriptItemKind::Error, title, body)
+    }
+
     /// Marks a tool-output item for the compacting fold animation.
     pub(crate) fn with_tool_fold(mut self) -> Self {
-        self.fold_next_at = Some(Instant::now() + Duration::from_millis(700));
+        self.fold_next_at =
+            Some(Instant::now() + Duration::from_millis(TOOL_RESULT_FOLD_INITIAL_DELAY_MS));
         self.fold_stage = 0;
+        self
+    }
+
+    /// Forces a specific fold stage without scheduling the animation.
+    pub(crate) fn with_fold_stage(mut self, stage: u8) -> Self {
+        self.fold_stage = stage;
+        self.fold_next_at = None;
         self
     }
 
@@ -205,16 +242,16 @@ impl TranscriptItem {
             return false;
         }
 
-        if self.fold_stage >= 2 {
+        if self.fold_stage >= 3 {
             self.fold_next_at = None;
             return false;
         }
 
         self.fold_stage += 1;
-        self.fold_next_at = if self.fold_stage >= 2 {
+        self.fold_next_at = if self.fold_stage >= 3 {
             None
         } else {
-            Some(now + Duration::from_millis(120))
+            Some(now + Duration::from_millis(TOOL_RESULT_FOLD_STEP_DELAY_MS))
         };
         true
     }

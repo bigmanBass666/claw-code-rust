@@ -36,6 +36,7 @@ static BUILTIN_MODEL_CATALOG: LazyLock<Option<BuiltinModelCatalog>> =
     LazyLock::new(|| BuiltinModelCatalog::load().ok());
 
 pub(crate) fn draw(frame: &mut Frame, app: &TuiApp) {
+    frame.render_widget(Clear, frame.area());
     let content_area = centered_content_area(frame.area());
     let composer_height = composer_height(app, content_area);
     let transcript_height = transcript_height(app, content_area);

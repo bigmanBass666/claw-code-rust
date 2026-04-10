@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     path::PathBuf,
     time::{Duration, Instant},
 };
@@ -96,6 +97,8 @@ pub(crate) struct TuiApp {
     pub(crate) pending_status_index: Option<usize>,
     /// Index of the assistant transcript item currently receiving streamed text.
     pub(crate) pending_assistant_index: Option<usize>,
+    /// Map from tool call id to the transcript row that should be updated with the result.
+    pub(crate) pending_tool_items: HashMap<String, usize>,
     /// Background query worker owned by the UI.
     pub(crate) worker: QueryWorkerHandle,
     /// Built-in model catalog used for onboarding and model selection.

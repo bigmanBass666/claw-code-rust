@@ -19,19 +19,26 @@ impl TuiApp {
                     self.scroll = 0;
                 }
             }
-            WorkerEvent::ToolCall { summary, detail } => {
+            WorkerEvent::ToolCall {
+                tool_use_id,
+                summary,
+                detail: _detail,
+            } => {
                 self.pending_assistant_index = None;
-                self.push_item(
-                    TranscriptItemKind::ToolCall,
-                    summary.clone(),
-                    detail.as_deref().unwrap_or("").trim().to_string(),
-                );
+                self.transcript
+                    .push(TranscriptItem::tool_call(summary.clone()));
+                let index = self.transcript.len() - 1;
+                if self.follow_output {
+                    self.scroll = 0;
+                }
+                self.pending_tool_items.insert(tool_use_id, index);
                 if self.busy {
                     self.show_turn_status_line("Thinking");
                 }
                 self.status_message = format!("{summary}...");
             }
             WorkerEvent::ToolResult {
+                tool_use_id,
                 preview,
                 is_error,
                 truncated: _,
@@ -41,20 +48,67 @@ impl TuiApp {
                 } else {
                     TranscriptItemKind::ToolResult
                 };
-                let title = if is_error {
-                    "Tool error"
-                } else {
-                    "Tool output"
-                };
                 let body = preview.trim().to_string();
-                if kind == TranscriptItemKind::ToolResult {
-                    self.transcript
-                        .push(TranscriptItem::new(kind, title, body).with_tool_fold());
+                if let Some(index) = self.pending_tool_items.remove(&tool_use_id) {
+                    if let Some(item) = self.transcript.get_mut(index) {
+                        if kind == TranscriptItemKind::ToolResult {
+                            *item = TranscriptItem::live_tool_result(item.title.clone(), body);
+                        } else {
+                            *item = TranscriptItem::tool_error(item.title.clone(), body);
+                        }
+                    }
                     if self.follow_output {
                         self.scroll = 0;
                     }
+                } else if let Some(item) = self.transcript.last_mut() {
+                    if item.kind == TranscriptItemKind::ToolCall {
+                        if kind == TranscriptItemKind::ToolResult {
+                            *item = TranscriptItem::live_tool_result(item.title.clone(), body);
+                        } else {
+                            *item = TranscriptItem::tool_error(item.title.clone(), body);
+                        }
+                        if self.follow_output {
+                            self.scroll = 0;
+                        }
+                    } else {
+                        let title = if is_error {
+                            "Tool error"
+                        } else {
+                            "Tool output"
+                        };
+                        if kind == TranscriptItemKind::ToolResult {
+                            self.transcript
+                                .push(TranscriptItem::live_tool_result(title, body));
+                            if self.follow_output {
+                                self.scroll = 0;
+                            }
+                        } else {
+                            self.transcript
+                                .push(TranscriptItem::tool_error(title, body));
+                            if self.follow_output {
+                                self.scroll = 0;
+                            }
+                        }
+                    }
                 } else {
-                    self.push_item(kind, title, body);
+                    let title = if is_error {
+                        "Tool error"
+                    } else {
+                        "Tool output"
+                    };
+                    if kind == TranscriptItemKind::ToolResult {
+                        self.transcript
+                            .push(TranscriptItem::live_tool_result(title, body));
+                        if self.follow_output {
+                            self.scroll = 0;
+                        }
+                    } else {
+                        self.transcript
+                            .push(TranscriptItem::tool_error(title, body));
+                        if self.follow_output {
+                            self.scroll = 0;
+                        }
+                    }
                 }
                 if self.busy {
                     self.show_turn_status_line("Thinking");
@@ -74,6 +128,7 @@ impl TuiApp {
                 self.busy = false;
                 self.clear_turn_status_line();
                 self.pending_assistant_index = None;
+                self.pending_tool_items.clear();
                 self.turn_count = turn_count;
                 self.total_input_tokens = total_input_tokens;
                 self.total_output_tokens = total_output_tokens;
@@ -94,6 +149,7 @@ impl TuiApp {
                 self.busy = false;
                 self.clear_turn_status_line();
                 self.pending_assistant_index = None;
+                self.pending_tool_items.clear();
                 self.turn_count = turn_count;
                 self.total_input_tokens = total_input_tokens;
                 self.total_output_tokens = total_output_tokens;
@@ -140,6 +196,7 @@ impl TuiApp {
                 self.aux_panel_selection = 0;
                 self.pending_status_index = None;
                 self.pending_assistant_index = None;
+                self.pending_tool_items.clear();
                 self.busy = false;
                 self.total_input_tokens = 0;
                 self.total_output_tokens = 0;
@@ -151,15 +208,12 @@ impl TuiApp {
             WorkerEvent::SessionSwitched {
                 session_id,
                 title,
-                model,
+                model: _model,
                 total_input_tokens,
                 total_output_tokens,
                 history_items,
                 loaded_item_count,
             } => {
-                if let Some(model) = model {
-                    self.model = model;
-                }
                 self.total_input_tokens = total_input_tokens;
                 self.total_output_tokens = total_output_tokens;
                 self.aux_panel = None;
@@ -168,6 +222,7 @@ impl TuiApp {
                 self.pending_assistant_index = None;
                 self.busy = false;
                 self.transcript = history_items;
+                self.pending_tool_items.clear();
                 self.follow_output = true;
                 self.scroll = 0;
                 self.status_message = format!("Active session: {session_id}");

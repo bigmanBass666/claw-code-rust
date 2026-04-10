@@ -15,6 +15,7 @@ const MAX_METADATA_LENGTH: usize = 30_000;
 const DEFAULT_TIMEOUT_MS: u64 = 120_000;
 const DEFAULT_YIELD_TIME_MS: u64 = 1_000;
 const DEFAULT_MAX_OUTPUT_TOKENS: usize = 16_000;
+const DESCRIPTION_MAX_BYTES_LABEL: &str = "64 KB";
 
 /// Execute shell commands.
 ///
@@ -29,10 +30,22 @@ impl Tool for BashTool {
     }
 
     fn description(&self) -> &str {
+        let chaining = if cfg!(windows) {
+            "If commands depend on each other and must run sequentially, use a single PowerShell command string. In Windows PowerShell 5.1, do not rely on Bash chaining semantics like `cmd1 && cmd2`; prefer `cmd1; if ($?) { cmd2 }` when the later command depends on earlier success."
+        } else {
+            "If commands depend on each other and must run sequentially, use a single shell command and chain with `&&` when later commands depend on earlier success."
+        };
         Box::leak(
             DESCRIPTION
+                .replace(
+                    "${directory}",
+                    &std::env::current_dir()
+                        .map_or_else(|_| ".".to_string(), |path| path.display().to_string()),
+                )
                 .replace("${os}", std::env::consts::OS)
                 .replace("${shell}", platform_shell(true).program)
+                .replace("${chaining}", chaining)
+                .replace("${maxBytes}", DESCRIPTION_MAX_BYTES_LABEL)
                 .into_boxed_str(),
         )
     }
@@ -43,7 +56,7 @@ impl Tool for BashTool {
             "properties": {
                 "command": {
                     "type": "string",
-                    "description": "The bash command to execute"
+                    "description": "The shell command to execute in the selected platform shell"
                 },
                 "cmd": {
                     "type": "string",

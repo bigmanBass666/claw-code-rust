@@ -359,9 +359,6 @@ async fn run_worker_inner(
                             Ok(result) => {
                                 active_turn_id = None;
                                 session_id = Some(next_session_id);
-                                if let Some(next_model) = result.session.resolved_model.clone() {
-                                    model = next_model;
-                                }
                                 let _ = event_tx.send(WorkerEvent::SessionSwitched {
                                     session_id: next_session_id.to_string(),
                                     title: result.session.title,
@@ -604,12 +601,21 @@ fn handle_completed_item(payload: ItemEventPayload, event_tx: &mpsc::UnboundedSe
             payload,
             ..
         } => {
+            let tool_use_id = payload
+                .get("tool_use_id")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or_default()
+                .to_string();
             let summary = summarize_tool_call(&payload);
             let detail = payload
                 .get("input")
                 .map(render_json_preview)
                 .filter(|detail| !detail.is_empty());
-            let _ = event_tx.send(WorkerEvent::ToolCall { summary, detail });
+            let _ = event_tx.send(WorkerEvent::ToolCall {
+                tool_use_id,
+                summary,
+                detail,
+            });
         }
         ItemEnvelope {
             item_kind: ItemKind::ToolResult,
@@ -624,7 +630,13 @@ fn handle_completed_item(payload: ItemEventPayload, event_tx: &mpsc::UnboundedSe
                 .get("is_error")
                 .and_then(serde_json::Value::as_bool)
                 .unwrap_or(false);
+            let tool_use_id = payload
+                .get("tool_use_id")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or_default()
+                .to_string();
             let _ = event_tx.send(WorkerEvent::ToolResult {
+                tool_use_id,
                 preview: content,
                 is_error,
                 truncated: false,
@@ -635,19 +647,53 @@ fn handle_completed_item(payload: ItemEventPayload, event_tx: &mpsc::UnboundedSe
 }
 
 fn project_history_items(items: &[SessionHistoryItem]) -> Vec<TranscriptItem> {
-    items
-        .iter()
-        .map(|item| {
-            let kind = match item.kind {
-                SessionHistoryItemKind::User => TranscriptItemKind::User,
-                SessionHistoryItemKind::Assistant => TranscriptItemKind::Assistant,
-                SessionHistoryItemKind::ToolCall => TranscriptItemKind::ToolCall,
-                SessionHistoryItemKind::ToolResult => TranscriptItemKind::ToolResult,
-                SessionHistoryItemKind::Error => TranscriptItemKind::Error,
-            };
-            TranscriptItem::new(kind, item.title.clone(), item.body.clone())
-        })
-        .collect()
+    let mut transcript = Vec::new();
+    let mut index = 0usize;
+
+    while index < items.len() {
+        let item = &items[index];
+        if item.kind == SessionHistoryItemKind::ToolCall {
+            if let Some(next) = items.get(index + 1) {
+                if matches!(
+                    next.kind,
+                    SessionHistoryItemKind::ToolResult | SessionHistoryItemKind::Error
+                ) {
+                    let merged = if next.kind == SessionHistoryItemKind::Error {
+                        TranscriptItem::tool_error(item.title.clone(), next.body.clone())
+                    } else {
+                        TranscriptItem::restored_tool_result(item.title.clone(), next.body.clone())
+                    };
+                    transcript.push(merged);
+                    index += 2;
+                    continue;
+                }
+            }
+        }
+
+        let kind = match item.kind {
+            SessionHistoryItemKind::User => TranscriptItemKind::User,
+            SessionHistoryItemKind::Assistant => TranscriptItemKind::Assistant,
+            SessionHistoryItemKind::ToolCall => TranscriptItemKind::ToolCall,
+            SessionHistoryItemKind::ToolResult => TranscriptItemKind::ToolResult,
+            SessionHistoryItemKind::Error => TranscriptItemKind::Error,
+        };
+        let transcript_item = match item.kind {
+            SessionHistoryItemKind::ToolCall => TranscriptItem::tool_call(item.title.clone()),
+            SessionHistoryItemKind::ToolResult => {
+                TranscriptItem::restored_tool_result(item.title.clone(), item.body.clone())
+            }
+            SessionHistoryItemKind::Error => {
+                TranscriptItem::tool_error(item.title.clone(), item.body.clone())
+            }
+            SessionHistoryItemKind::User | SessionHistoryItemKind::Assistant => {
+                TranscriptItem::new(kind, item.title.clone(), item.body.clone())
+            }
+        };
+        transcript.push(transcript_item);
+        index += 1;
+    }
+
+    transcript
 }
 
 fn summarize_tool_call(payload: &serde_json::Value) -> String {
@@ -656,14 +702,48 @@ fn summarize_tool_call(payload: &serde_json::Value) -> String {
         .and_then(serde_json::Value::as_str)
         .unwrap_or("tool");
     let input = payload.get("input").unwrap_or(&serde_json::Value::Null);
-    match tool_name {
+    let detail = summarize_tool_input(tool_name, input);
+    if detail.is_empty() {
+        tool_name.to_string()
+    } else {
+        format!("{tool_name}: {detail}")
+    }
+}
+
+fn summarize_tool_input(tool_name: &str, input: &serde_json::Value) -> String {
+    let candidate = match tool_name {
         "bash" => input
             .get("command")
             .and_then(serde_json::Value::as_str)
-            .map(|command| format!("Ran {command}"))
-            .unwrap_or_else(|| "Ran shell command".to_string()),
-        other => format!("Ran {other}"),
+            .or_else(|| input.get("cmd").and_then(serde_json::Value::as_str)),
+        "read" => input
+            .get("filePath")
+            .and_then(serde_json::Value::as_str)
+            .or_else(|| input.get("path").and_then(serde_json::Value::as_str)),
+        "write" | "edit" | "apply_patch" => input
+            .get("path")
+            .and_then(serde_json::Value::as_str)
+            .or_else(|| input.get("filePath").and_then(serde_json::Value::as_str)),
+        "webfetch" | "websearch" => input
+            .get("url")
+            .and_then(serde_json::Value::as_str)
+            .or_else(|| input.get("query").and_then(serde_json::Value::as_str)),
+        _ => None,
+    };
+
+    candidate
+        .map(|text| compact_tool_summary(text, 96))
+        .unwrap_or_else(|| compact_tool_summary(&render_json_preview(input), 96))
+}
+
+fn compact_tool_summary(text: &str, max_chars: usize) -> String {
+    let compact = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let truncated = compact.chars().count() > max_chars;
+    let mut out = compact.chars().take(max_chars).collect::<String>();
+    if truncated {
+        out.push('…');
     }
+    out
 }
 
 fn render_json_preview(value: &serde_json::Value) -> String {
@@ -836,8 +916,12 @@ mod tests {
     use clawcr_core::{SessionId, SessionTitleState};
     use clawcr_server::{SessionRuntimeStatus, SessionSummary};
 
-    use super::{normalize_display_output, summarize_tool_call, truncate_tool_output};
+    use super::{
+        normalize_display_output, project_history_items, summarize_tool_call, truncate_tool_output,
+    };
     use crate::events::SessionListEntry;
+    use crate::events::TranscriptItem;
+    use clawcr_server::{SessionHistoryItem, SessionHistoryItemKind};
 
     #[test]
     fn bash_tool_summary_uses_command_text() {
@@ -850,7 +934,7 @@ mod tests {
 
         assert_eq!(
             summarize_tool_call(&payload),
-            "Ran Get-Date -Format \"yyyy-MM-dd\""
+            "bash: Get-Date -Format \"yyyy-MM-dd\""
         );
     }
 
@@ -930,6 +1014,30 @@ mod tests {
         assert_eq!(
             normalize_display_output("\r\n\r\nhello\r\nworld\r\n\r\n"),
             "hello\nworld"
+        );
+    }
+
+    #[test]
+    fn project_history_merges_tool_call_and_result() {
+        let items = vec![
+            SessionHistoryItem {
+                kind: SessionHistoryItemKind::ToolCall,
+                title: "Ran powershell -Command \"Get-Date\"".to_string(),
+                body: String::new(),
+            },
+            SessionHistoryItem {
+                kind: SessionHistoryItemKind::ToolResult,
+                title: "Tool output".to_string(),
+                body: "2026-04-09".to_string(),
+            },
+        ];
+
+        assert_eq!(
+            project_history_items(&items),
+            vec![TranscriptItem::restored_tool_result(
+                "Ran powershell -Command \"Get-Date\"",
+                "2026-04-09"
+            )]
         );
     }
 }

@@ -31,6 +31,7 @@ impl TuiApp {
             aux_panel: None,
             pending_status_index: None,
             pending_assistant_index: None,
+            pending_tool_items: std::collections::HashMap::new(),
             thinking_selection: None,
             worker,
             model_catalog: config.model_catalog,

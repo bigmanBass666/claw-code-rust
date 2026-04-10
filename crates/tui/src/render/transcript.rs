@@ -123,7 +123,9 @@ fn append_transcript_item(
         | TranscriptItemKind::System
         | TranscriptItemKind::Error => {
             append_wrapped_title(lines, &item.title, item.kind, inner_width);
-            append_transcript_body(lines, item, inner_width);
+            if item.kind != TranscriptItemKind::ToolCall {
+                append_transcript_body(lines, item, inner_width);
+            }
         }
     }
 }
@@ -165,8 +167,9 @@ fn rendered_transcript_body(item: &TranscriptItem) -> String {
     match item.kind {
         TranscriptItemKind::ToolResult => match item.fold_stage {
             0 => item.body.trim_end_matches('\n').to_string(),
-            1 => fold_tool_output(&item.body, 6),
-            _ => fold_tool_output(&item.body, 3),
+            1 => fold_tool_output(&item.body, 4),
+            2 => fold_tool_output(&item.body, 1),
+            _ => String::new(),
         },
         _ => item.body.trim_end_matches('\n').to_string(),
     }
