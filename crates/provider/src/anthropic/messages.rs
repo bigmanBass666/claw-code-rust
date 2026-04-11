@@ -9,9 +9,11 @@ use reqwest_eventsource::{Event, EventSource};
 use serde_json::{Value, json};
 use tracing::debug;
 
+use super::AnthropicAIRole;
 use crate::{
-    ModelProviderSDK, ModelRequest, ModelResponse, RequestContent, ResponseContent, StopReason,
-    StreamEvent, Usage,
+    ModelProviderSDK, ModelRequest, ModelResponse, ProviderAdapter, ProviderCapabilities,
+    ProviderFamily, RequestContent, ResponseContent, ResponseMetadata, StopReason, StreamEvent,
+    Usage,
 };
 
 /// Anthropic provider backed by the official HTTP API.
@@ -250,6 +252,7 @@ impl ModelProviderSDK for AnthropicProvider {
                                         cache_creation_input_tokens: None,
                                         cache_read_input_tokens: None,
                                     },
+                                    metadata: ResponseMetadata::default(),
                                 };
                                 yield StreamEvent::MessageDone { response };
                                 return;
@@ -270,6 +273,7 @@ impl ModelProviderSDK for AnthropicProvider {
                     cache_creation_input_tokens: None,
                     cache_read_input_tokens: None,
                 },
+                metadata: ResponseMetadata::default(),
             };
             yield StreamEvent::MessageDone { response };
         };
@@ -282,15 +286,25 @@ impl ModelProviderSDK for AnthropicProvider {
     }
 }
 
+#[async_trait]
+impl ProviderAdapter for AnthropicProvider {
+    fn family(&self) -> ProviderFamily {
+        ProviderFamily::Anthropic
+    }
+
+    fn capabilities(&self, _model: &str) -> ProviderCapabilities {
+        ProviderCapabilities::anthropic()
+    }
+}
+
 fn build_request(request: &ModelRequest, stream: bool) -> Value {
     let mut messages = Vec::new();
 
     for message in &request.messages {
-        let role = if message.role == "assistant" {
-            "assistant"
-        } else {
-            "user"
-        };
+        let role = message
+            .role
+            .parse::<AnthropicAIRole>()
+            .unwrap_or(AnthropicAIRole::User);
         let mut content = Vec::new();
         for block in &message.content {
             match block {
@@ -385,6 +399,7 @@ fn parse_response(value: Value) -> Result<ModelResponse> {
         content,
         stop_reason,
         usage,
+        metadata: ResponseMetadata::default(),
     })
 }
 

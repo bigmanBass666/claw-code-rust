@@ -6,7 +6,9 @@ use futures::StreamExt;
 use serde_json::json;
 use tracing::{debug, info, info_span, warn};
 
-use clawcr_provider::{ModelProvider, ModelRequest, ResponseContent, StopReason, StreamEvent};
+use clawcr_provider::{
+    ModelProvider, ModelRequest, ResponseContent, SamplingControls, StopReason, StreamEvent,
+};
 use clawcr_tools::{ToolCall, ToolContext, ToolOrchestrator, ToolRegistry};
 
 use crate::{AgentError, ContentBlock, Message, Role, SessionState};
@@ -288,6 +290,7 @@ pub async fn query(
             max_tokens: session.config.token_budget.max_output_tokens,
             tools: Some(registry.tool_definitions()),
             temperature: None,
+            sampling: SamplingControls::default(),
             thinking: Some(
                 session
                     .config
@@ -557,6 +560,7 @@ mod tests {
                             }],
                             stop_reason: Some(StopReason::ToolUse),
                             usage: Usage::default(),
+                            metadata: Default::default(),
                         },
                     }),
                 ]
@@ -572,6 +576,7 @@ mod tests {
                             content: vec![ResponseContent::Text("done".into())],
                             stop_reason: Some(StopReason::EndTurn),
                             usage: Usage::default(),
+                            metadata: Default::default(),
                         },
                     }),
                 ]
