@@ -218,8 +218,6 @@ pub struct ModelPreset {
     pub context_window: u32,
     /// Percentage of the context window treated as effectively usable.
     pub effective_context_window_percent: Option<u8>,
-    /// Optional token threshold for auto-compaction.
-    pub auto_compact_token_limit: Option<u32>,
     /// Policy used when truncating content for requests.
     #[serde(default, deserialize_with = "crate::truncation::deserialize_truncation_policy_config")]
     pub truncation_policy: TruncationPolicyConfig,
@@ -255,7 +253,6 @@ impl Default for ModelPreset {
             base_instructions: String::new(),
             context_window: 200_000,
             effective_context_window_percent: None,
-            auto_compact_token_limit: None,
             truncation_policy: TruncationPolicyConfig::default(),
             input_modalities: vec![InputModality::default()],
             supports_image_detail_original: false,
@@ -445,7 +442,6 @@ mod tests {
             base_instructions: String::new(),
             context_window: 200_000,
             effective_context_window_percent: None,
-            auto_compact_token_limit: None,
             truncation_policy: TruncationPolicyConfig {
                 mode: crate::TruncationMode::Tokens,
                 limit: 10000,
