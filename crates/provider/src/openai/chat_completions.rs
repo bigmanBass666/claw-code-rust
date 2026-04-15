@@ -9,14 +9,15 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use tracing::debug;
 mod stream;
-use clawcr_protocol::{ModelRequest, ProviderFamily, RequestContent};
+use clawcr_protocol::{
+    ModelRequest, ModelResponse, ProviderFamily, RequestContent, ResponseContent, ResponseExtra,
+    ResponseMetadata, StopReason, StreamEvent, Usage,
+};
 
 use super::capabilities::{OpenAIReasoningMode, OpenAITransport, resolve_request_profile};
 use super::shared::{reasoning_value, request_role, tool_definitions};
-use crate::{
-    ModelProviderSDK, ModelResponse, ProviderAdapter, ProviderCapabilities, ResponseContent,
-    ResponseExtra, ResponseMetadata, StopReason, StreamEvent, Usage, merge_extra_body,
-};
+use crate::text_normalization::split_tagged_text;
+use crate::{ModelProviderSDK, ProviderAdapter, ProviderCapabilities, merge_extra_body};
 
 /// OpenAI chat-completion provider backed by the official HTTP API.
 /// <https://developers.openai.com/api/reference/chat-completions/overview>
@@ -730,8 +731,14 @@ fn parse_response(value: Value) -> Result<ModelResponse> {
                 });
             }
             if let Some(text) = &message.content {
-                if !text.is_empty() {
-                    content.push(ResponseContent::Text(text.clone()));
+                let (assistant_text, reasoning) = split_tagged_text(text);
+                for text in reasoning {
+                    if !text.is_empty() {
+                        metadata.extras.push(ResponseExtra::ReasoningText { text });
+                    }
+                }
+                if !assistant_text.is_empty() {
+                    content.push(ResponseContent::Text(assistant_text));
                 }
             }
             for tool_call in &message.tool_calls {
@@ -1009,7 +1016,7 @@ impl ModelProviderSDK for OpenAIProvider {
     }
 
     /// --------- Here is an example of stream response ------------------------
-    /// ```
+    /// ```text
     /// {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}]}
     /// {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"content":"Hello"},"logprobs":null,"finish_reason":null}]}
     /// ....
@@ -1058,9 +1065,9 @@ mod tests {
     use super::super::OpenAIReasoningEffort;
     use super::super::shared::reasoning_effort;
     use super::{parse_finish_reason, parse_response, parse_usage};
-    use crate::{
-        ResponseContent, ResponseExtra, StopReason, openai::chat_completions::build_request,
-    };
+    use clawcr_protocol::{ResponseContent, ResponseExtra, StopReason};
+
+    use crate::openai::chat_completions::build_request;
 
     #[test]
     fn debug_request_body_includes_tools_and_reasoning_effort() {
