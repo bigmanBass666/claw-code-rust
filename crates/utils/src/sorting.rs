@@ -164,6 +164,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::approx_constant)]
     fn test_floating_point() {
         let mut floats = [3.14, 1.41, 2.71, 0.0, -1.0];
         quicksort(&mut floats);

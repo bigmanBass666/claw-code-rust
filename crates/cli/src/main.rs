@@ -154,8 +154,13 @@ impl LogLevel {
 async fn run_prompt(
     input: &str,
     model_override: Option<&str>,
-    _log_level: Option<&str>,
+    log_level: Option<&str>,
 ) -> Result<()> {
+    if let Some(level) = log_level {
+        let _ = tracing_subscriber::fmt()
+            .with_env_filter(tracing_subscriber::EnvFilter::new(level))
+            .try_init();
+    }
     use clawcr_core::{SessionConfig, SessionState, default_base_instructions};
     use clawcr_tools::{ToolOrchestrator, ToolRegistry};
 
@@ -234,107 +239,206 @@ async fn run_prompt(
     Ok(())
 }
 
-async fn run_doctor() -> Result<()> {
-    use colored::Colorize;
-    use std::process::Command;
+#[allow(dead_code)]
+enum CheckStatus {
+    Pass,
+    Fail,
+    Warn,
+}
 
-    println!("{}", "=== Claw CR Doctor ===".bold());
-    println!();
+trait DoctorCheck {
+    fn name(&self) -> &str;
+    fn run(&self) -> CheckStatus;
+}
 
-    let mut all_ok = true;
+struct RustToolchainCheck;
 
-    println!("{} {}", "✓".green().bold(), "Rust toolchain:");
-    let rustc = Command::new("rustc").arg("--version").output();
-    match rustc {
-        Ok(output) => {
-            let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            println!("  {}", version);
-        }
-        Err(e) => {
-            println!("  {} rustc not found: {}", "✗".red(), e);
-            all_ok = false;
+impl DoctorCheck for RustToolchainCheck {
+    fn name(&self) -> &str {
+        "Rust toolchain"
+    }
+
+    fn run(&self) -> CheckStatus {
+        use colored::Colorize;
+        use std::process::Command;
+
+        match Command::new("rustc").arg("--version").output() {
+            Ok(output) => {
+                let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                println!("  {}", version);
+                CheckStatus::Pass
+            }
+            Err(e) => {
+                println!("  {} rustc not found: {e}", "✗".red());
+                CheckStatus::Fail
+            }
         }
     }
-    println!();
+}
 
-    println!("{} {}", "✓".green().bold(), "Config home (CLAWCR_HOME):");
-    match find_clawcr_home() {
-        Ok(home) => {
-            println!("  {}", home.display());
-        }
-        Err(e) => {
-            println!("  {} {}", "✗".red(), e);
-            all_ok = false;
+struct ConfigHomeCheck;
+
+impl DoctorCheck for ConfigHomeCheck {
+    fn name(&self) -> &str {
+        "Config home (CLAWCR_HOME)"
+    }
+
+    fn run(&self) -> CheckStatus {
+        use colored::Colorize;
+
+        match find_clawcr_home() {
+            Ok(home) => {
+                println!("  {}", home.display());
+                CheckStatus::Pass
+            }
+            Err(e) => {
+                println!("  {} {e}", "✗".red());
+                CheckStatus::Fail
+            }
         }
     }
-    println!();
+}
 
-    println!("{} {}", "✓".green().bold(), "Config file:");
-    if let Ok(home) = find_clawcr_home() {
+struct ConfigFileCheck;
+
+impl DoctorCheck for ConfigFileCheck {
+    fn name(&self) -> &str {
+        "Config file"
+    }
+
+    fn run(&self) -> CheckStatus {
+        use colored::Colorize;
+
+        let Ok(home) = find_clawcr_home() else {
+            return CheckStatus::Fail;
+        };
+
         let config_path = home.join("config.toml");
-        if config_path.exists() {
-            println!("  {} {}", "found".green(), config_path.display());
-            let content = std::fs::read_to_string(&config_path).unwrap_or_default();
-            if content.contains("api_key") && content.contains("base_url") {
-                println!("  {} api_key and base_url configured", "✓".green());
-            } else {
-                println!("  {} api_key or base_url missing", "!".yellow());
-                all_ok = false;
-            }
-            let model_line = content.lines().find(|l| l.starts_with("model"));
-            if let Some(line) = model_line {
-                println!("  default model: {}", line.trim());
-            } else {
-                println!("  {} no default model set", "!".yellow());
-            }
-        } else {
+        if !config_path.exists() {
             println!(
                 "  {} not found at {}",
                 "missing".yellow(),
                 config_path.display()
             );
             println!("  Run `clawcr onboard` to create it.");
-            all_ok = false;
+            return CheckStatus::Fail;
+        }
+
+        println!("  {} {}", "found".green(), config_path.display());
+        let content = std::fs::read_to_string(&config_path).unwrap_or_default();
+
+        let mut ok = true;
+        if content.contains("api_key") && content.contains("base_url") {
+            println!("  {} api_key and base_url configured", "✓".green());
+        } else {
+            println!("  {} api_key or base_url missing", "!".yellow());
+            ok = false;
+        }
+
+        let model_line = content.lines().find(|l| l.starts_with("model"));
+        if let Some(line) = model_line {
+            println!("  default model: {}", line.trim());
+        } else {
+            println!("  {} no default model set", "!".yellow());
+        }
+
+        if ok {
+            CheckStatus::Pass
+        } else {
+            CheckStatus::Fail
         }
     }
-    println!();
+}
 
-    println!("{} {}", "✓".green().bold(), "Provider resolution:");
-    match resolve_provider_settings() {
-        Ok(resolved) => {
-            println!("  provider:   {}", resolved.provider_id);
-            println!("  model:      {}", resolved.model);
-            println!(
-                "  base_url:   {}",
-                resolved.base_url.unwrap_or("default".into())
-            );
-            println!("  wire_api:   {:?}", resolved.wire_api);
-            if resolved.api_key.is_some() {
-                println!("  api_key:    {} (set)", "✓".green());
-            } else {
-                println!("  api_key:    {} (not set)", "✗".red());
-                all_ok = false;
+struct ProviderResolutionCheck;
+
+impl DoctorCheck for ProviderResolutionCheck {
+    fn name(&self) -> &str {
+        "Provider resolution"
+    }
+
+    fn run(&self) -> CheckStatus {
+        use colored::Colorize;
+
+        match resolve_provider_settings() {
+            Ok(resolved) => {
+                println!("  provider:   {}", resolved.provider_id);
+                println!("  model:      {}", resolved.model);
+                println!(
+                    "  base_url:   {}",
+                    resolved.base_url.unwrap_or("default".into())
+                );
+                println!("  wire_api:   {:?}", resolved.wire_api);
+                if resolved.api_key.is_some() {
+                    println!("  api_key:    {} (set)", "✓".green());
+                    CheckStatus::Pass
+                } else {
+                    println!("  api_key:    {} (not set)", "✗".red());
+                    CheckStatus::Fail
+                }
+            }
+            Err(e) => {
+                println!("  {} {e}", "✗".red());
+                CheckStatus::Fail
             }
         }
-        Err(e) => {
-            println!("  {} {}", "✗".red(), e);
-            all_ok = false;
+    }
+}
+
+struct ModelCatalogCheck;
+
+impl DoctorCheck for ModelCatalogCheck {
+    fn name(&self) -> &str {
+        "Model catalog"
+    }
+
+    fn run(&self) -> CheckStatus {
+        use colored::Colorize;
+
+        match PresetModelCatalog::load() {
+            Ok(catalog) => {
+                let count = catalog.into_inner().len();
+                println!("  {} builtin models loaded", count);
+                CheckStatus::Pass
+            }
+            Err(e) => {
+                println!("  {} failed to load: {e}", "✗".red());
+                CheckStatus::Fail
+            }
         }
     }
+}
+
+fn run_single_check(check: &dyn DoctorCheck) -> bool {
+    use colored::Colorize;
+
+    println!("{} {}:", "✓".green().bold(), check.name());
+    let status = check.run();
     println!();
 
-    println!("{} {}", "✓".green().bold(), "Model catalog:");
-    match clawcr_core::PresetModelCatalog::load() {
-        Ok(catalog) => {
-            let count = catalog.into_inner().len();
-            println!("  {} builtin models loaded", count);
-        }
-        Err(e) => {
-            println!("  {} failed to load: {}", "✗".red(), e);
+    matches!(status, CheckStatus::Pass)
+}
+
+async fn run_doctor() -> Result<()> {
+    use colored::Colorize;
+
+    println!("{}", "=== Claw CR Doctor ===".bold());
+    println!();
+
+    let checks: Vec<Box<dyn DoctorCheck>> = vec![
+        Box::new(RustToolchainCheck),
+        Box::new(ConfigHomeCheck),
+        Box::new(ConfigFileCheck),
+        Box::new(ProviderResolutionCheck),
+        Box::new(ModelCatalogCheck),
+    ];
+
+    let mut all_ok = true;
+    for check in &checks {
+        if !run_single_check(check.as_ref()) {
             all_ok = false;
         }
     }
-    println!();
 
     if all_ok {
         println!("{}", "All checks passed. Ready to use!".green().bold());
