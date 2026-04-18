@@ -393,7 +393,7 @@ PR Manager 自动执行：
 ### 不重复造轮子
 - progress.txt 保留作为人工可读进度记录
 - notifications/ 保留作为 GitHub 动态来源
-- docs/plans/ 和 docs/agent-rules/ 保留作为项目文档
+- docs/agent-rules/ 保留作为项目文档
 
 ### 协调文件位置
 - 新协调系统使用 tasks/ 目录
@@ -449,7 +449,6 @@ PR Manager 自动执行：
 | `tasks/logs/pr-manager.log` | PR Manager 日志 | 可选 |
 | `tasks/logs/maintainer.log` | Maintainer 日志 | 可选 |
 | `tasks/shared/progress.md` | 进度追踪 | 是 |
-| `tasks/shared/rules/*.md` | 规范链接 | 是 |
 
 ### 日志文件说明
 
