@@ -176,6 +176,7 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 | 唤醒 | 用户打开特定Agent的会话 |
 | 睁眼 | 被唤醒的Agent主动读取自己的inbox消息 |
 | 声音 | Agent写入共享文件的消息 |
+| 待机 | Agent被唤醒但未收到消息，轮询等待中 |
 
 ### 消息收件箱结构
 
@@ -283,7 +284,7 @@ tasks/
 │   ├── pr-queue.md       # 待处理的 PR
 │   └── pr-history.md     # PR 历史
 │
-├── maintainer/            # 【第五层】Maintainer 专用
+├── maintainer/            # Maintainer 专用
 │   ├── instructions.md   # Maintainer 行为规范
 │   ├── improvements.md   # 改进队列（待实施项）
 │   └── reports/          # 分析报告输出
