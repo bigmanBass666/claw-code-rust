@@ -159,6 +159,39 @@ Maintainer → "如何让系统更好" ← 你在这里
 
 ---
 
+## 故障处理
+
+### Git 损坏检测与恢复
+
+多会话并行操作 Git 时可能发生 .git 损坏。如果检测到问题：
+
+1. **检测信号**：
+   - `git status` / `git add` / `git commit` 报错
+   - Git 操作返回 "fatal: not a git repository"
+   - Objects 损坏或索引错误
+
+2. **恢复步骤**：
+```bash
+# 1. 备份工作区（排除 .git）
+cp -r claw-code-rust claw-code-rust-backup
+
+# 2. 从 origin 重新 clone
+git clone https://github.com/bigmanBass666/claw-code-rust.git
+
+# 3. 如果有未提交的代码，从 backup 恢复
+cp claw-code-rust-backup/*.rs claw-code-rust/crates/...
+```
+
+3. **预防措施**：
+   - 每次重要操作后 `git push`
+   - 避免多个会话同时操作同一分支
+   - 使用文件锁协调 Git 操作
+
+4. **通知用户**：
+   发现 Git 损坏后，立即向用户报告并提供恢复方案。
+
+---
+
 ## 禁止事项
 
 - 不要在没有数据分析的情况下凭空提出改进
