@@ -74,6 +74,46 @@
 
 ---
 
+## 🤖 多会话并行模式（推荐）
+
+由于 Trae 单个会话没有并行功能，需要**开多个会话**实现真正并行。
+
+### 会话分配
+
+| 会话 | 角色 | 开场白 |
+|------|------|--------|
+| 会话 1 | Planner（决策者） | "你是 **Planner Agent（决策者）**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/planner/instructions.md`，然后开始观察项目状态并制定计划。" |
+| 会话 2 | Coordinator（管理员） | "你是 **Coordinator Agent（管理员）**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/coordinator/instructions.md`，然后等待 Planner 下发任务并进行分配协调。" |
+| 会话 3 | Worker-001（工人） | "你是 **Worker-001 Agent（工人）**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/workers/instructions.md`，然后等待 Coordinator 分配任务。" |
+| 会话 4 | Worker-002（工人） | "你是 **Worker-002 Agent（工人）**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/workers/instructions.md`，然后等待 Coordinator 分配任务。" |
+| 会话 5 | PR Manager（PR 管理员） | "你是 **PR Manager Agent（PR 管理员）**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/pr-manager/instructions.md`，然后等待 Worker 完成任务并准备 PR。" |
+| 会话 6 | Maintainer + Housekeeper | "你是 **Maintainer Agent（维护者）** 和 **Housekeeper Agent（仓库守护）**。请读取 `tasks/ARCHITECTURE.md`、`tasks/maintainer/instructions.md` 和 `tasks/housekeeper/instructions.md`，然后监控和改进系统。" |
+
+### 协作流程
+
+```
+Planner 制定计划
+    ↓ 写入 tasks/planner/plans/
+Coordinator 读取计划，分配任务
+    ↓ 写入 tasks/coordinator/queue.md
+Worker 认领任务
+    ↓ 完成通知
+PR Manager 准备 PR
+    ↓ 合并后
+Housekeeper 清理分支
+    ↓
+Maintainer 分析日志，改进系统
+```
+
+### 注意事项
+
+1. **每个会话只扮演一个角色** — 不要让一个会话同时扮演多个 Agent
+2. **通过文件协作** — 不要在会话里问另一个 Agent，直接读写 `tasks/` 下的文件
+3. **日志自动记录** — 每个 Agent 会自动写日志到 `tasks/logs/`
+4. **你是旁观者** — 只需要审批重要决策，其他让 Agent 自己协调
+
+---
+
 ## 💬 常用指令
 
 ### 作为旁观者
