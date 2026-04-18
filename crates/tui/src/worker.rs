@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::{path::{Path, PathBuf}, time::Duration};
 
 use anyhow::{Context, Result};
 use tokio::{
@@ -7,15 +7,16 @@ use tokio::{
 };
 
 use clawcr_core::{
-    Model, ModelCatalog, PresetModelCatalog, SessionId, TurnId, TurnStatus, test_model_connection,
+    Model, ModelCatalog, PresetModelCatalog, ProviderWireApi, SessionId, TurnId, TurnStatus,
+    test_model_connection,
 };
 use clawcr_protocol::ProviderFamily;
 use clawcr_provider::{ModelProviderSDK, anthropic::AnthropicProvider, openai::OpenAIProvider};
 use clawcr_server::{
     InputItem, ItemEnvelope, ItemEventPayload, ItemKind, ServerEvent, SessionHistoryItem,
     SessionHistoryItemKind, SessionListParams, SessionResumeParams, SessionStartParams,
-    SessionTitleUpdateParams, StdioServerClient, StdioServerClientConfig, TurnEventPayload,
-    TurnInterruptParams, TurnStartParams,
+    SessionTitleUpdateParams, SkillListParams, SkillSource, StdioServerClient,
+    StdioServerClientConfig, TurnEventPayload, TurnInterruptParams, TurnStartParams,
 };
 
 use crate::events::{SessionListEntry, TranscriptItem, TranscriptItemKind, WorkerEvent};
@@ -49,6 +50,8 @@ enum OperationCommand {
     SetThinking(Option<String>),
     /// Replace the provider connection settings and restart the server client.
     ReconfigureProvider {
+        /// Provider wire protocol to use for future turns.
+        wire_api: ProviderWireApi,
         /// Model identifier to use for future turns.
         model: String,
         /// Optional provider base URL override.
@@ -65,6 +68,8 @@ enum OperationCommand {
     },
     /// Request a session list from the server.
     ListSessions,
+    /// Request a skills list from the server.
+    ListSkills,
     /// Clear the active session so the next prompt starts a fresh one lazily.
     StartNewSession,
     /// Switch the active session to a persisted session identifier.
@@ -124,12 +129,14 @@ impl QueryWorkerHandle {
     /// Reconfigures the provider connection used by the background server client.
     pub(crate) fn reconfigure_provider(
         &self,
+        wire_api: ProviderWireApi,
         model: String,
         base_url: Option<String>,
         api_key: Option<String>,
     ) -> Result<()> {
         self.command_tx
             .send(OperationCommand::ReconfigureProvider {
+                wire_api,
                 model,
                 base_url,
                 api_key,
@@ -159,6 +166,13 @@ impl QueryWorkerHandle {
     pub(crate) fn list_sessions(&self) -> Result<()> {
         self.command_tx
             .send(OperationCommand::ListSessions)
+            .map_err(|_| anyhow::anyhow!("interactive worker is no longer running"))
+    }
+
+    /// Requests the current skill list from the background worker.
+    pub(crate) fn list_skills(&self) -> Result<()> {
+        self.command_tx
+            .send(OperationCommand::ListSkills)
             .map_err(|_| anyhow::anyhow!("interactive worker is no longer running"))
     }
 
@@ -246,6 +260,7 @@ async fn run_worker_inner(
     .await?;
     let _ = client.initialize().await?;
     let mut session_id: Option<SessionId> = None;
+    let mut session_cwd = config.cwd.clone();
     let mut model = config.model;
     let mut thinking_selection = config.thinking_selection;
     let mut active_turn_id: Option<TurnId> = None;
@@ -324,6 +339,7 @@ async fn run_worker_inner(
                         }
                     }
                 Some(OperationCommand::ReconfigureProvider {
+                    wire_api,
                     model: next_model,
                     base_url,
                     api_key,
@@ -331,6 +347,22 @@ async fn run_worker_inner(
                         // Recreate the client so new provider credentials take effect
                         // without requiring the whole app to restart.
                         model = next_model;
+                        apply_env_override(
+                            &mut server_env,
+                            "CLAWCR_PROVIDER",
+                            wire_api.provider_family().as_str(),
+                        );
+                        apply_env_override(
+                            &mut server_env,
+                            "CLAWCR_WIRE_API",
+                            match wire_api {
+                                ProviderWireApi::OpenAIChatCompletions => {
+                                    "openai_chat_completions"
+                                }
+                                ProviderWireApi::OpenAIResponses => "openai_responses",
+                                ProviderWireApi::AnthropicMessages => "anthropic_messages",
+                            },
+                        );
                         apply_env_override(&mut server_env, "CLAWCR_MODEL", &model);
                         apply_optional_env_override(&mut server_env, "CLAWCR_BASE_URL", base_url);
                         apply_optional_env_override(&mut server_env, "CLAWCR_API_KEY", api_key);
@@ -389,9 +421,41 @@ async fn run_worker_inner(
                             }
                         }
                     }
+                    Some(OperationCommand::ListSkills) => {
+                        match tokio::time::timeout(
+                            Duration::from_secs(5),
+                            client.skills_list(SkillListParams {
+                                cwd: Some(session_cwd.clone()),
+                            }),
+                        )
+                        .await
+                        {
+                            Ok(Ok(result)) => {
+                                let body = render_skill_list_body(&result.skills);
+                                let _ = event_tx.send(WorkerEvent::SkillsListed { body });
+                            }
+                            Ok(Err(error)) => {
+                                let _ = event_tx.send(WorkerEvent::TurnFailed {
+                                    message: error.to_string(),
+                                    turn_count,
+                                    total_input_tokens,
+                                    total_output_tokens,
+                                });
+                            }
+                            Err(_) => {
+                                let _ = event_tx.send(WorkerEvent::TurnFailed {
+                                    message: "skills list request timed out".to_string(),
+                                    turn_count,
+                                    total_input_tokens,
+                                    total_output_tokens,
+                                });
+                            }
+                        }
+                    }
                     Some(OperationCommand::StartNewSession) => {
                         active_turn_id = None;
                         session_id = None;
+                        session_cwd = config.cwd.clone();
                         let _ = event_tx.send(WorkerEvent::NewSessionPrepared);
                     }
                     Some(OperationCommand::SwitchSession(next_session_id)) => {
@@ -404,6 +468,7 @@ async fn run_worker_inner(
                             Ok(result) => {
                                 active_turn_id = None;
                                 session_id = Some(next_session_id);
+                                session_cwd = result.session.cwd.clone();
                                 let _ = event_tx.send(WorkerEvent::SessionSwitched {
                                     session_id: next_session_id.to_string(),
                                     title: result.session.title,
@@ -463,8 +528,8 @@ async fn run_worker_inner(
                         }
                     }
                     Some(OperationCommand::InterruptTurn) => {
-                        if let (Some(turn_id), Some(active_session_id)) = (active_turn_id, session_id) {
-                            if let Err(error) = client
+                        if let (Some(turn_id), Some(active_session_id)) = (active_turn_id, session_id)
+                            && let Err(error) = client
                                 .turn_interrupt(TurnInterruptParams {
                                     session_id: active_session_id,
                                     turn_id,
@@ -479,7 +544,6 @@ async fn run_worker_inner(
                                     total_output_tokens,
                                 });
                             }
-                        }
                     }
                     Some(OperationCommand::Shutdown) | None => {
                         break;
@@ -570,14 +634,13 @@ async fn run_worker_inner(
                                 }
                             }
                             "session/title/updated" => {
-                                if let ServerEvent::SessionTitleUpdated(payload) = event {
-                                    if let Some(title) = payload.session.title {
+                                if let ServerEvent::SessionTitleUpdated(payload) = event
+                                    && let Some(title) = payload.session.title {
                                         let _ = event_tx.send(WorkerEvent::SessionTitleUpdated {
                                             session_id: payload.session.session_id.to_string(),
                                             title,
                                         });
                                     }
-                                }
                             }
                             _ => {}
                         }
@@ -594,7 +657,7 @@ async fn run_worker_inner(
 
 async fn ensure_session_started(
     client: &mut StdioServerClient,
-    cwd: &PathBuf,
+    cwd: &Path,
     model: &str,
     session_id: &mut Option<SessionId>,
 ) -> Result<EnsureSessionOutcome> {
@@ -607,7 +670,7 @@ async fn ensure_session_started(
 
     let session = client
         .session_start(SessionStartParams {
-            cwd: cwd.clone(),
+            cwd: cwd.to_path_buf(),
             ephemeral: false,
             title: None,
             model: Some(model.to_string()),
@@ -621,13 +684,13 @@ async fn ensure_session_started(
 }
 
 async fn spawn_client(
-    cwd: &PathBuf,
+    cwd: &Path,
     env: Vec<(String, String)>,
     server_log_level: Option<String>,
 ) -> Result<StdioServerClient> {
     StdioServerClient::spawn(StdioServerClientConfig {
         program: std::env::current_exe().context("resolve current executable for server launch")?,
-        workspace_root: Some(cwd.clone()),
+        workspace_root: Some(cwd.to_path_buf()),
         env,
         args: server_log_level
             .into_iter()
@@ -649,6 +712,35 @@ fn apply_optional_env_override(env: &mut Vec<(String, String)>, key: &str, value
     match value {
         Some(value) => apply_env_override(env, key, &value),
         None => env.retain(|(existing_key, _)| existing_key != key),
+    }
+}
+
+fn render_skill_list_body(skills: &[clawcr_server::SkillRecord]) -> String {
+    if skills.is_empty() {
+        return "No skills found".to_string();
+    }
+
+    skills
+        .iter()
+        .map(|skill| {
+            let status = if skill.enabled { "enabled" } else { "disabled" };
+            format!(
+                "{} ({status})\n{}\nsource: {}\npath: {}",
+                skill.name,
+                skill.description,
+                render_skill_source(&skill.source),
+                skill.path.display()
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n")
+}
+
+fn render_skill_source(source: &SkillSource) -> String {
+    match source {
+        SkillSource::User => "user".to_string(),
+        SkillSource::Workspace { cwd } => format!("workspace ({})", cwd.display()),
+        SkillSource::Plugin { plugin_id } => format!("plugin ({plugin_id})"),
     }
 }
 
@@ -756,22 +848,21 @@ fn project_history_items(items: &[SessionHistoryItem]) -> Vec<TranscriptItem> {
 
     while index < items.len() {
         let item = &items[index];
-        if item.kind == SessionHistoryItemKind::ToolCall {
-            if let Some(next) = items.get(index + 1) {
-                if matches!(
-                    next.kind,
-                    SessionHistoryItemKind::ToolResult | SessionHistoryItemKind::Error
-                ) {
-                    let merged = if next.kind == SessionHistoryItemKind::Error {
-                        TranscriptItem::tool_error(item.title.clone(), next.body.clone())
-                    } else {
-                        TranscriptItem::restored_tool_result(item.title.clone(), next.body.clone())
-                    };
-                    transcript.push(merged);
-                    index += 2;
-                    continue;
-                }
-            }
+        if item.kind == SessionHistoryItemKind::ToolCall
+            && let Some(next) = items.get(index + 1)
+            && matches!(
+                next.kind,
+                SessionHistoryItemKind::ToolResult | SessionHistoryItemKind::Error
+            )
+        {
+            let merged = if next.kind == SessionHistoryItemKind::Error {
+                TranscriptItem::tool_error(item.title.clone(), next.body.clone())
+            } else {
+                TranscriptItem::restored_tool_result(item.title.clone(), next.body.clone())
+            };
+            transcript.push(merged);
+            index += 2;
+            continue;
         }
 
         let kind = match item.kind {
@@ -938,7 +1029,7 @@ fn resolve_validation_model(provider: ProviderFamily, model: &str) -> Result<Mod
     }
     Ok(Model {
         slug: model.to_string(),
-        provider: provider,
+        provider,
         ..Model::default()
     })
 }

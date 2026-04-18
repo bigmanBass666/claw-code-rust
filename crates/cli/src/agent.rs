@@ -11,26 +11,34 @@ pub async fn run_agent(
     force_onboarding: bool,
     no_alt_screen: bool,
     log_level: Option<&str>,
+    model_override: Option<&str>,
 ) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let model_catalog = PresetModelCatalog::load()?;
     let stored_config = load_config().unwrap_or_default();
     let (onboarding_mode, resolved) =
         resolve_initial_provider_settings(force_onboarding, &stored_config, &model_catalog)?;
+
+    let effective_model = model_override.unwrap_or(&resolved.model);
+    let resolved = ResolvedProviderSettings {
+        model: effective_model.to_string(),
+        ..resolved
+    };
     let saved_models = stored_config
         .model_providers
         .values()
         .flat_map(|provider_config| {
-            let provider = provider_config
+            let wire_api = provider_config
                 .wire_api
-                .unwrap_or(ProviderWireApi::OpenAIChatCompletions)
-                .provider_family();
+                .unwrap_or(ProviderWireApi::OpenAIChatCompletions);
+            let provider = wire_api.provider_family();
             provider_config
                 .models
                 .iter()
                 .map(move |model| SavedModelEntry {
                     model: model.model.clone(),
                     provider,
+                    wire_api,
                     base_url: model
                         .base_url
                         .clone()
@@ -60,6 +68,7 @@ pub async fn run_agent(
         server_log_level: log_level.map(ToOwned::to_owned),
         model_catalog,
         saved_models,
+        thinking_selection: resolved.model_thinking_selection,
         show_model_onboarding: onboarding_mode,
         terminal_mode: if no_alt_screen {
             TerminalMode::Never
@@ -93,7 +102,7 @@ fn resolve_initial_provider_settings(
             api_key: None,
             model_auto_compact_token_limit: None,
             model_context_window: None,
-            model_reasoning_effort: None,
+            model_thinking_selection: None,
             disable_response_storage: false,
             preferred_auth_method: None,
         }

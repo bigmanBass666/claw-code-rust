@@ -1,5 +1,6 @@
 use std::time::{Duration, Instant};
 
+use clawcr_core::ProviderWireApi;
 use clawcr_core::SessionId;
 use clawcr_protocol::ProviderFamily;
 const TOOL_RESULT_FOLD_INITIAL_DELAY_MS: u64 = 420;
@@ -58,6 +59,8 @@ pub struct SavedModelEntry {
     pub model: String,
     /// Provider family the model belongs to.
     pub provider: ProviderFamily,
+    /// Concrete wire protocol stored for this model's provider profile.
+    pub wire_api: ProviderWireApi,
     /// Optional provider base URL override stored with the model.
     pub base_url: Option<String>,
     /// Optional API key override stored with the model.
@@ -143,6 +146,11 @@ pub(crate) enum WorkerEvent {
     SessionsListed {
         /// Structured sessions rendered into the bottom picker panel.
         sessions: Vec<SessionListEntry>,
+    },
+    /// Current known skills were listed from the server.
+    SkillsListed {
+        /// Pre-rendered skill summary shown in the bottom panel.
+        body: String,
     },
     /// The interactive client cleared its active session and is waiting for the next prompt.
     NewSessionPrepared,

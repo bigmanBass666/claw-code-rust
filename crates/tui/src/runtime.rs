@@ -9,7 +9,7 @@ impl TuiApp {
             cwd: config.cwd.clone(),
             server_env: config.server_env,
             server_log_level: config.server_log_level,
-            thinking_selection: None,
+            thinking_selection: config.thinking_selection.clone(),
         });
 
         let mut app = Self {
@@ -32,7 +32,7 @@ impl TuiApp {
             pending_assistant_index: None,
             pending_reasoning_index: None,
             pending_tool_items: std::collections::HashMap::new(),
-            thinking_selection: None,
+            thinking_selection: config.thinking_selection,
             worker,
             model_catalog: config.model_catalog,
             saved_models: config.saved_models,
@@ -58,6 +58,15 @@ impl TuiApp {
             inline_assistant_header_emitted: false,
             pending_inline_history: Vec::new(),
         };
+
+        if let Err(error) = app.validate_model_provider_selection(app.provider, &app.model) {
+            app.push_item(
+                TranscriptItemKind::Error,
+                "Model configuration error",
+                error.to_string(),
+            );
+            app.status_message = "Configured model does not match the active provider".to_string();
+        }
 
         if app.show_model_onboarding {
             app.show_onboarding_model_panel();
@@ -359,25 +368,19 @@ impl TuiApp {
                     self.scroll = self.scroll.saturating_add(1);
                 }
             }
-            KeyCode::PageUp => {
-                if !self.inline_mode {
-                    if self.follow_output {
-                        self.scroll =
-                            render::get_max_scroll(self, self.transcript_area(terminal_area));
-                        self.follow_output = false;
-                    }
-                    self.scroll = self.scroll.saturating_sub(10);
+            KeyCode::PageUp if !self.inline_mode => {
+                if self.follow_output {
+                    self.scroll = render::get_max_scroll(self, self.transcript_area(terminal_area));
+                    self.follow_output = false;
                 }
+                self.scroll = self.scroll.saturating_sub(10);
             }
-            KeyCode::PageDown => {
-                if !self.inline_mode {
-                    if self.follow_output {
-                        self.scroll =
-                            render::get_max_scroll(self, self.transcript_area(terminal_area));
-                        self.follow_output = false;
-                    }
-                    self.scroll = self.scroll.saturating_add(10);
+            KeyCode::PageDown if !self.inline_mode => {
+                if self.follow_output {
+                    self.scroll = render::get_max_scroll(self, self.transcript_area(terminal_area));
+                    self.follow_output = false;
                 }
+                self.scroll = self.scroll.saturating_add(10);
             }
             KeyCode::Esc => {
                 self.flush_pending_paste_burst(true);
@@ -480,9 +483,7 @@ impl TuiApp {
 
         if self.onboarding_base_url_pending {
             let base_url = prompt.trim();
-            if !base_url.is_empty()
-                && !(base_url.starts_with("http://") || base_url.starts_with("https://"))
-            {
+            if !(base_url.is_empty() || base_url.starts_with("http://") || base_url.starts_with("https://")) {
                 self.status_message = "Base URL must start with http:// or https://".to_string();
                 self.onboarding_prompt = Some("base url".to_string());
                 return Ok(());
@@ -529,7 +530,7 @@ impl TuiApp {
                 self.onboarding_selected_api_key
                     .as_deref()
                     .map(super::worker_events::mask_secret)
-                    .unwrap_or_else(String::new)
+                    .unwrap_or_default()
             ));
             let Some(model) = self.onboarding_selected_model.clone() else {
                 anyhow::bail!("onboarding model selection was lost before validation");

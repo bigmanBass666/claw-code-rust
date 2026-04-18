@@ -442,8 +442,7 @@ impl ModelProviderSDK for OpenAIResponsesProvider {
                                 if let Some(item) = chunk.get("item") {
                                     if let Some(reasoning_content) =
                                         item.get("reasoning_content").and_then(Value::as_str)
-                                    {
-                                        if !reasoning_content.is_empty() {
+                                        && !reasoning_content.is_empty() {
                                             if !reasoning_started {
                                                 reasoning_started = true;
                                                 yield StreamEvent::ReasoningStart { index: 1 };
@@ -454,7 +453,6 @@ impl ModelProviderSDK for OpenAIResponsesProvider {
                                                 text: reasoning_content.to_string(),
                                             };
                                         }
-                                    }
                                     if let Some(ResponseContent::ToolUse { id, name, input }) = parse_output_item(item).into_iter().next() {
                                         let key = id.clone();
                                         tool_calls.insert(key.clone(), (id.clone(), name.clone(), input.to_string()));

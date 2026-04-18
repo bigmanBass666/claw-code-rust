@@ -252,6 +252,11 @@ impl TuiApp {
                 }
                 self.status_message = "Sessions loaded".to_string();
             }
+            WorkerEvent::SkillsListed { body } => {
+                self.close_inline_assistant_stream();
+                self.show_aux_panel("Skills", body);
+                self.status_message = "Skills loaded".to_string();
+            }
             WorkerEvent::NewSessionPrepared => {
                 self.close_inline_assistant_stream();
                 self.aux_panel = None;
@@ -319,13 +324,11 @@ impl TuiApp {
                     content: AuxPanelContent::SessionList(entries),
                     ..
                 }) = self.aux_panel.as_mut()
-                {
-                    if let Some(entry) = entries
+                    && let Some(entry) = entries
                         .iter_mut()
                         .find(|entry| entry.session_id.to_string() == session_id)
-                    {
-                        entry.title = title.clone();
-                    }
+                {
+                    entry.title = title.clone();
                 }
                 self.status_message = format!("Session titled: {title}");
             }
@@ -392,11 +395,11 @@ impl TuiApp {
     }
 
     pub(crate) fn set_turn_status_line(&mut self, title: impl Into<String>) {
-        if let Some(index) = self.pending_status_index {
-            if let Some(item) = self.transcript.get_mut(index) {
-                item.title = title.into();
-                item.body.clear();
-            }
+        if let Some(index) = self.pending_status_index
+            && let Some(item) = self.transcript.get_mut(index)
+        {
+            item.title = title.into();
+            item.body.clear();
         }
     }
 

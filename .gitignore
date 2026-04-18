@@ -1,1 +1,5 @@
 /target
+
+tasks/workers/locks/
+tasks/logs/*.log
+.trae/

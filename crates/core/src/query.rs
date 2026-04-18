@@ -187,7 +187,13 @@ const MICRO_COMPACT_THRESHOLD: usize = 10_000;
 
 fn micro_compact(content: String) -> String {
     if content.len() > MICRO_COMPACT_THRESHOLD {
-        let mut truncated = content[..MICRO_COMPACT_THRESHOLD].to_string();
+        let truncate_at = content
+            .char_indices()
+            .map(|(index, _)| index)
+            .take_while(|index| *index <= MICRO_COMPACT_THRESHOLD)
+            .last()
+            .unwrap_or(0);
+        let mut truncated = content[..truncate_at].to_string();
         truncated.push_str("\n...[truncated]");
         truncated
     } else {
@@ -230,11 +236,13 @@ fn load_prompt_md(cwd: &std::path::Path) -> Option<String> {
 fn build_system_prompt(base_instructions: &str) -> String {
     let mut sections = Vec::new();
     if !base_instructions.is_empty() {
-        sections.push(format!("{}", base_instructions.to_string()));
+        sections.push(base_instructions.to_string());
     }
     sections.join("\n\n")
 }
 
+/// TODO: Here the shell has issue, on windows, it always return cmd.exe, however,
+/// the windows usually powershell
 fn build_environment_context(cwd: &Path) -> String {
     let shell = std::env::var("SHELL")
         .ok()
@@ -341,7 +349,11 @@ pub async fn query(
     let mut context_compacted = false;
 
     loop {
-        // Check token budget and compact before building the request
+        for prompt in session.drain_pending_user_prompts() {
+            session.push_message(Message::user(prompt));
+        }
+
+        // 1.3 + 1.7: Check token budget and compact before building the request
         if session.last_input_tokens > 0
             && session
                 .config
