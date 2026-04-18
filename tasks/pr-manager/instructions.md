@@ -109,6 +109,20 @@ git diff upstream/main --name-only | grep -E "^(tasks/|notifications/|\.trae/|AG
 
 等待用户批准后，再执行实际的 PR 提交。
 
+### 7. 通知 Housekeeper 清理
+
+提交 PR 后，更新 `tasks/housekeeper/cleanup-queue.md`：
+```markdown
+### [BRANCH-XXX] feat/xxx
+- **原因**: PR #XX 已提交
+- **类型**: auto-clean
+- **添加时间**: YYYY-MM-DD HH:MM
+- **添加者**: PR Manager
+- **状态**: pending
+```
+
+PR 合并后会自动清理。
+
 ---
 
 ## PR 质量检查清单
@@ -190,6 +204,17 @@ Coordinator 完成任务后会通知你：
 
 ### 向 Planner 汇报
 定期更新 PR 状态到 `tasks/shared/progress.md`
+
+### 向 Housekeeper 通知
+PR 合并后，将待清理的 feat/ 分支写入 `tasks/housekeeper/cleanup-queue.md`：
+```markdown
+### [BRANCH-XXX] feat/xxx
+- **原因**: PR #XX 已合并
+- **类型**: auto-clean
+- **添加时间**: YYYY-MM-DD HH:MM
+- **添加者**: PR Manager
+- **状态**: pending
+```
 
 ---
 

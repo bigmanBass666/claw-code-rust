@@ -6,12 +6,13 @@
 用户开启多个 Trae AI 会话并行工作，但没有分工、没有协调。需要一个可以**自主判断"做什么"**的系统，让 AI 能够自动运转，产出**干净的 PR**。
 
 ### 目标
-建立五层架构的自主闭环系统：
+建立六层架构的自主闭环系统：
 - **Planner（决策者）** — 判断做什么，决定项目下一步
 - **Coordinator（管理员）** — 分配任务、协调冲突
 - **Worker（工人）** — 执行具体任务
 - **PR Manager（PR 管理员）** — 提取干净改动、质量检查、准备 PR
 - **Maintainer（维护者）** — 分析运行日志，持续改进系统本身
+- **Housekeeper（仓库守护）** — 清理已合并/过期的分支，保持仓库整洁
 
 用户是最高领导人，一般情况下做旁观者，必要时介入。
 
@@ -30,7 +31,7 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 
 ---
 
-## 五层 Agent 架构
+## 六层 Agent 架构
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -100,6 +101,7 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 │  - 执行 PR 质量检查                                      │
 │  - 生成 PR 描述                                          │
 │  - 向用户汇报 PR 状态                                    │
+│  - 通知 Housekeeper 清理已合并分支                        │
 │  - 记录运行日志到 tasks/logs/pr-manager.log             │
 │                                                          │
 │  位置：tasks/pr-manager/                                │
@@ -109,8 +111,6 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │           Maintainer Agent（维护者）                     │
-│                                                          │
-│  【第五层 — 自我改进闭环】                               │
 │                                                          │
 │  - 收集所有 Agent 的运行日志                             │
 │  - 分析系统瓶颈、低效模式、重复问题                       │
@@ -123,17 +123,36 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 │                                                          │
 │  位置：tasks/maintainer/                                │
 └─────────────────────────────────────────────────────────┘
+                           ▲
+                           │ 分支清理任务
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│           Housekeeper Agent（仓库守护）                   │
+│                                                          │
+│  【第六层 — 仓库维护闭环】                               │
+│                                                          │
+│  - 接收 PR Manager 的清理通知                            │
+│  - 清理已合并的 feat/ 分支                               │
+│  - 清理过期的 dev/agent/ 分支                           │
+│  - 向 Maintainer 汇报清理结果                             │
+│  - 记录运行日志到 tasks/logs/housekeeper.log            │
+│                                                          │
+│  触发条件：PR 合并后 / 每24小时安全网                    │
+│                                                          │
+│  位置：tasks/housekeeper/                               │
+└─────────────────────────────────────────────────────────┘
 
-         ┌──────────────────────────────┐
+         ┌────────────────────────────────┐
          │      日志系统 (tasks/logs/)    │
-         │                              │
+         │                                │
          │  system.log    系统总日志     │
          │  planner.log   Planner 日志   │
-         │  coordinator.log Coordinator  │
-         │  workers.log   Worker 日志    │
+         │  coordinator.log Coordinator   │
+         │  workers.log   Worker 日志     │
          │  pr-manager.log PR Manager    │
          │  maintainer.log Maintainer    │
-         └──────────────────────────────┘
+         │  housekeeper.log Housekeeper  │
+         └────────────────────────────────┘
 ```
 
 ---
@@ -172,17 +191,21 @@ tasks/
 │   └── reports/          # 分析报告输出
 │       └── report-YYYY-MM-DD.md
 │
-├── logs/                  # 【新增】运行日志系统
+├── housekeeper/          # 【第六层】Housekeeper 专用
+│   ├── instructions.md   # Housekeeper 行为规范
+│   └── cleanup-queue.md  # 分支清理队列
+│
+├── logs/                  # 运行日志系统
 │   ├── README.md         # 日志格式说明
 │   ├── system.log        # 系统总日志
 │   ├── planner.log       # Planner 日志
 │   ├── coordinator.log   # Coordinator 日志
 │   ├── workers.log       # Worker 日志
 │   ├── pr-manager.log    # PR Manager 日志
-│   └── maintainer.log    # Maintainer 日志
+│   ├── maintainer.log    # Maintainer 日志
+│   └── housekeeper.log   # Housekeeper 日志
 │
-├── shared/               # 所有 Agent 共享
-│   ├── rules/            # 项目规范引用
+├── shared/               # 共享资源
 │   └── progress.md       # 进度追踪
 │
 └── ARCHITECTURE.md       # 本文档
