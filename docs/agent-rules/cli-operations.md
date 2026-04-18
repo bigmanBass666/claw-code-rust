@@ -94,6 +94,70 @@
 
 ---
 
+## 待机模式
+
+Agent 可以在用户唤醒后进入**待机轮询**，主动监听 inbox 而非等待手动唤醒。
+
+### 触发
+
+用户唤醒 Agent 时附加指令："待机模式，等 [来源Agent] 消息"
+
+### 工作流
+
+```
+1. 更新 agent-status → "待机(等XXX消息)"
+2. 执行: Start-Sleep -Seconds 300
+3. 醒来后检查: Select-String -Path $inboxPath -Pattern '未读' -Quiet
+4. 有消息 → 标记已读 → 开始工作
+5. 无消息 → 回到步骤 2
+```
+
+### 待机命令
+
+```powershell
+Start-Sleep -Seconds 300
+```
+
+### 检查命令
+
+```powershell
+$inboxPath = "项目路径/tasks/shared/inbox/[自己的角色].md"
+Select-String -Path $inboxPath -Pattern '未读' -Quiet
+```
+
+返回 `True` = 有未读消息，返回 `False` = 无消息。
+
+### 超时恢复
+
+如果 Trae 超时杀掉了 sleep 命令：
+- 用户重新唤醒 Agent
+- Agent 读取 inbox → 有消息就工作，没消息就继续待机
+- 天然幂等，无需特殊恢复逻辑
+
+### ⚠️ 不要用 while 循环
+
+```powershell
+# ❌ 错误 — 被杀后恢复困难，上下文浪费
+while ($true) { ... Start-Sleep ... }
+
+# ✅ 正确 — 单次 sleep，Agent 自主决定是否重调用
+Start-Sleep -Seconds 300
+```
+
+原因：
+1. while 循环被超时杀掉后，Agent 会话可能异常
+2. 循环日志持续消耗上下文窗口
+3. Agent 在循环期间无 AI 控制权，无法做决策
+
+### 安全规则
+
+1. **终端上限 5 个** — 最多同时 2-3 个 Agent 待机
+2. **只待机紧邻下游** — 不需要全部待机
+3. **待机前更新 agent-status** — 状态改为"待机(等XXX消息)"
+4. **检测到消息后立即标记已读** — 防止重复触发
+
+---
+
 ## 系统重置
 
 当用户想要从头开始时，告诉任意Agent **"执行系统重置"**。
