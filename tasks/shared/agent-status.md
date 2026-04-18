@@ -9,8 +9,8 @@
 |-------|----------|----------|----------|
 | Planner | 2026-04-19 | 沉睡 | 用户手动 |
 | Coordinator | 2026-04-19 | 活跃 | - |
-| Worker-001 | 2026-04-19 | 沉睡 | Coordinator |
-| Worker-002 | 2026-04-19 | 沉睡 | Coordinator |
+| Worker-001 | 2026-04-19 | 活跃 | - |
+| Worker-002 | 2026-04-19 | 活跃 | - |
 | Worker-003 | 2026-04-19 | 沉睡 | Coordinator |
 | PR Manager | - | 未启动 | Worker |
 | Maintainer | - | 未启动 | 自动触发(3任务/24h/连续失败) |

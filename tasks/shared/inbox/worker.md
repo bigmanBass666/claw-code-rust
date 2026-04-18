@@ -4,8 +4,8 @@
 
 | 时间 | 来源 | 内容摘要 | 状态 |
 |------|------|----------|------|
-| 2026-04-19T17:00:00Z | Coordinator | TASK-010 分配给 Worker-001：修复 CJK 文本 panic（Issue #36）。详见下方完整指令。 | 未读 |
-| 2026-04-19T17:00:00Z | Coordinator | TASK-011 分配给 Worker-002：重新提取 Windows UNC path 修复为干净分支。详见下方完整指令。 | 未读 |
+| 2026-04-19T17:00:00Z | Coordinator | TASK-010 分配给 Worker-001：修复 CJK 文本 panic（Issue #36）。详见下方完整指令。 | 已读(2026-04-19) |
+| 2026-04-19T17:00:00Z | Coordinator | TASK-011 分配给 Worker-002：重新提取 Windows UNC path 修复为干净分支。详见下方完整指令。 | 已读(Worker-002) |
 | 2026-04-19T17:00:00Z | Coordinator | TASK-012 分配给 Worker-003：清理远程分支。详见下方完整指令。 | 未读 |
 
 ## 完整任务指令
