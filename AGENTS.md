@@ -150,6 +150,8 @@ Housekeeper — 清理已合并/过期的分支
 
 每次更改后立即 `git add` + `git commit` + `git push`，格式 `type: 描述`，绝不留未提交工作。
 
+**开始工作前**：先 `git status` 检查未提交改动，如有则先 commit + push，再开始新工作。防止中途故障导致数据丢失。
+
 ### ⚠️ PR 质量铁律
 
 **PR 不是越大越好！**
@@ -216,6 +218,7 @@ chore: apply clippy fixes across workspace             ❌ 太泛
 | 📝 Inbox读写 | 向其他Agent发消息时 | `cli-operations.md#Agent协作操作` |
 | 🐛 调试方法 | 遇到bug时 | `cli-operations.md#调试方法论` |
 | 📂 Git工作流 | 创建分支/提PR时 | `git-workflow.md` |
+| 🚨 Git损坏 | git命令报错时 | `cli-operations.md#.git损坏应急协议` |
 
 ## 详细规范
 

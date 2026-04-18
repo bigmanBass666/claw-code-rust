@@ -129,3 +129,29 @@ Agent会执行以下操作：
 2. **保留cleanup-queue的清理历史**
 3. **保留logs/目录的日志文件**
 4. **重置前必须告知用户将要做什么**
+
+---
+
+## .git 损坏应急协议
+
+当 `git` 命令报错（如 `fatal: not a git repository`、`corrupt`、`index.lock` 等）时：
+
+### 修复步骤
+
+1. **停止所有写操作** — 不要继续执行任务
+2. **诊断损坏程度**：
+   - `git status` — 是否能读？
+   - `git log --oneline -1` — 历史是否完整？
+   - `git fsck` — 检查损坏详情
+3. **尝试修复**：
+   - `index.lock` 残留 → `rm .git/index.lock`
+   - 轻微损坏 → `git fsck --full` 按提示修复
+   - HEAD 损坏 → `git reset --hard HEAD` 或 `git reset --hard origin/main`
+4. **严重损坏**（无法修复）→ 告知用户："⚠️ .git 严重损坏，建议用户手动处理"
+5. **修复后验证** → `git status` + `git log --oneline -3` 确认正常
+
+### 安全规则
+
+- **不要尝试 `git push --force`** — 可能覆盖远程数据
+- **不要删除 .git 目录** — 除非用户明确指示
+- **修复后立即 commit + push** — 确保当前工作不再次丢失
