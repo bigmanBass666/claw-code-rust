@@ -22,27 +22,15 @@
 
 ## 待处理任务
 
-### [TASK-009] 配置 upstream 远程仓库
-- **优先级**: P0
-- **描述**: 添加 `upstream` 远程仓库指向 `https://github.com/7df-lab/claw-code-rust.git`，执行 `git fetch upstream` 确认可用。注意：上游组织是 `7df-lab` 不是 `claw-cli`。
-- **期望结果**: `git remote -v` 显示 upstream，`git fetch upstream` 成功
-- **值得提 PR**: 否（本地配置）
-- **截止时间**: 2026-04-19
-- **依赖**: 无
-- **状态**: pending
-- **分配给**: Coordinator/Worker
-- **创建时间**: 2026-04-19
-- **更新时间**: 2026-04-19
-
 ### [TASK-010] 修复 CJK 文本 panic（Issue #36）
 - **优先级**: P0
 - **描述**: 修复 `crates/provider/src/text_normalization.rs` 中 `earliest_partial_start()` 函数的 byte indexing 问题。将 `for start in 0..text.len()` 改为 `for (start, _ch) in text.char_indices()`。这是对应 Issue #36 的修复。此 bug 导致所有 CJK 用户在使用流式响应时 panic。
 - **期望结果**: CJK 文本不再 panic，所有测试通过，`cargo fmt` + `cargo clippy` 通过
 - **值得提 PR**: 是 — 有对应 Issue #36，一行改动，高价值
 - **截止时间**: 2026-04-19
-- **依赖**: TASK-009
-- **状态**: pending
-- **分配给**: Coordinator/Worker
+- **依赖**: TASK-009 ✅
+- **状态**: assigned
+- **分配给**: Worker-001
 - **创建时间**: 2026-04-19
 - **更新时间**: 2026-04-19
 - **分支策略**: 从 upstream/main 创建 `agent/worker-001/fix-cjk-panic`
@@ -54,9 +42,9 @@
 - **期望结果**: 新分支只含 1 个 commit，只改 `crates/utils/src/home_dir.rs`，通过所有质量检查
 - **值得提 PR**: 是 — 替代 PR #42
 - **截止时间**: 2026-04-19
-- **依赖**: TASK-009
-- **状态**: pending
-- **分配给**: Coordinator/Worker
+- **依赖**: TASK-009 ✅
+- **状态**: assigned
+- **分配给**: Worker-002
 - **创建时间**: 2026-04-19
 - **更新时间**: 2026-04-19
 - **分支策略**: 从 upstream/main 创建 `feat/fix-windows-unc-path-v2`
@@ -68,9 +56,9 @@
 - **期望结果**: 远程分支列表干净，只保留有价值的分支
 - **值得提 PR**: 否
 - **截止时间**: 2026-04-19
-- **依赖**: TASK-009
-- **状态**: pending
-- **分配给**: Coordinator/Worker
+- **依赖**: TASK-009 ✅
+- **状态**: assigned
+- **分配给**: Worker-003
 - **创建时间**: 2026-04-19
 - **更新时间**: 2026-04-19
 
@@ -84,4 +72,8 @@
 
 ## 已完成任务
 
-<!-- 已完成的任务 -->
+### [TASK-009] 配置 upstream 远程仓库
+- **优先级**: P0
+- **描述**: 添加 `upstream` 远程仓库指向 `https://github.com/7df-lab/claw-code-rust.git`，执行 `git fetch upstream` 确认可用。
+- **完成时间**: 2026-04-19
+- **执行者**: Coordinator

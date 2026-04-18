@@ -8,7 +8,7 @@
 | Agent | 最近活跃 | 当前状态 | 等待唤醒 |
 |-------|----------|----------|----------|
 | Planner | 2026-04-19 | 沉睡 | 用户手动 |
-| Coordinator | 2026-04-19 | 沉睡 | Planner |
+| Coordinator | 2026-04-19 | 活跃 | - |
 | Worker-001 | 2026-04-19 | 沉睡 | Coordinator |
 | Worker-002 | 2026-04-19 | 沉睡 | Coordinator |
 | Worker-003 | 2026-04-19 | 沉睡 | Coordinator |
@@ -25,10 +25,10 @@
 
 | 任务ID | 描述 | 状态 | 负责人 | 优先级 | 创建时间 |
 |--------|------|------|--------|--------|----------|
-| TASK-009 | 配置 upstream 远程仓库 | pending | 待分配 | P0 | 2026-04-19 |
-| TASK-010 | 修复 CJK 文本 panic（Issue #36） | pending | 待分配 | P0 | 2026-04-19 |
-| TASK-011 | 重新提取 Windows UNC path 修复为干净分支 | pending | 待分配 | P1 | 2026-04-19 |
-| TASK-012 | 清理远程分支 | pending | 待分配 | P2 | 2026-04-19 |
+| TASK-009 | 配置 upstream 远程仓库 | completed | Coordinator | P0 | 2026-04-19 |
+| TASK-010 | 修复 CJK 文本 panic（Issue #36） | assigned | Worker-001 | P0 | 2026-04-19 |
+| TASK-011 | 重新提取 Windows UNC path 修复为干净分支 | assigned | Worker-002 | P1 | 2026-04-19 |
+| TASK-012 | 清理远程分支 | assigned | Worker-003 | P2 | 2026-04-19 |
 
 ---
 
@@ -36,6 +36,7 @@
 
 | 时间 | 被唤醒者 | 唤醒原因 | 结果 |
 |------|----------|----------|------|
+| 2026-04-19 | Coordinator | Planner下发任务 | TASK-009完成，TASK-010/011/012已分配 |
 | 2026-04-19 | Planner | 用户手动唤醒 | 制定Iteration 6计划，4任务下发 |
 | 2026-04-19 | Planner | 用户手动唤醒 | 制定Iteration 5计划，4任务下发 |
 
