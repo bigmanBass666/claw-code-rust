@@ -153,10 +153,10 @@ impl ChatCompletionStreamState {
     fn apply_chunk(&mut self, chunk: ChatCompletionStreamChunk) -> Vec<StreamEvent> {
         let mut events = Vec::new();
 
-        if self.response_id.is_empty() {
-            if let Some(id) = chunk.id {
-                self.response_id = id;
-            }
+        if self.response_id.is_empty()
+            && let Some(id) = chunk.id
+        {
+            self.response_id = id;
         }
         if self.created.is_none() {
             self.created = chunk.created;

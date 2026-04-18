@@ -231,10 +231,10 @@ fn format_token_count(value: usize) -> String {
 
 fn resolve_git_branch(cwd: &Path) -> Option<String> {
     let key = cwd.to_string_lossy().into_owned();
-    if let Ok(cache) = GIT_BRANCH_CACHE.lock() {
-        if let Some(branch) = cache.get(&key) {
-            return branch.clone();
-        }
+    if let Ok(cache) = GIT_BRANCH_CACHE.lock()
+        && let Some(branch) = cache.get(&key)
+    {
+        return branch.clone();
     }
 
     let branch = Command::new("git")
@@ -523,8 +523,7 @@ fn inline_command_popup_rows(
                 .max(1);
             let name_width = UnicodeWidthStr::width(suggestion.name);
             let gap = 2usize;
-            let description_width =
-                available.saturating_sub((name_width + gap) as u16).max(0) as usize;
+            let description_width = available.saturating_sub((name_width + gap) as u16) as usize;
             let description = truncate_to_width(suggestion.description, description_width);
             let mut spans = vec![
                 Span::styled(

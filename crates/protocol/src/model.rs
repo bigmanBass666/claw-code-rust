@@ -27,16 +27,12 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum Verbosity {
     Low,
+    #[default]
     Medium,
     High,
-}
-
-impl Default for Verbosity {
-    fn default() -> Self {
-        Self::Medium
-    }
 }
 
 /// Sampling controls and model-selection hints shared across adapters.
@@ -108,31 +104,23 @@ pub enum RequestContent {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 /// Supported input types that a model can accept.
+#[derive(Default)]
 pub enum InputModality {
     /// Plain text input.
+    #[default]
     Text,
     /// Image input.
     Image,
 }
 
-impl Default for InputModality {
-    fn default() -> Self {
-        Self::Text
-    }
-}
-
 /// OpenAI-family API surfaces supported by the runtime.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum OpenAiApi {
+    #[default]
     ChatCompletions,
     Responses,
-}
-
-impl Default for OpenAiApi {
-    fn default() -> Self {
-        OpenAiApi::ChatCompletions
-    }
 }
 
 /// Anthropic-family API surfaces supported by the runtime.
@@ -276,7 +264,7 @@ impl Default for Model {
 
 impl Model {
     pub fn provider_family(&self) -> ProviderFamily {
-        self.provider.clone()
+        self.provider
     }
 
     pub fn reasoning_effort_options(&self) -> Vec<ReasoningEffortPreset> {
@@ -300,7 +288,7 @@ impl Model {
     }
 
     pub fn effective_thinking_implementation(&self) -> ThinkingImplementation {
-        self.thinking_implementation.clone().unwrap_or_else(|| {
+        self.thinking_implementation.clone().unwrap_or({
             if matches!(self.thinking_capability, ThinkingCapability::Disabled) {
                 ThinkingImplementation::Disabled
             } else {

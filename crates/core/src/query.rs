@@ -236,7 +236,7 @@ fn load_prompt_md(cwd: &std::path::Path) -> Option<String> {
 fn build_system_prompt(base_instructions: &str) -> String {
     let mut sections = Vec::new();
     if !base_instructions.is_empty() {
-        sections.push(format!("{}", base_instructions.to_string()));
+        sections.push(base_instructions.to_string());
     }
     sections.join("\n\n")
 }
