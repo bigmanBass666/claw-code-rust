@@ -140,13 +140,7 @@ pub(crate) fn transcript_height(app: &TuiApp, area: Rect) -> u16 {
 pub(crate) fn composer_height(app: &TuiApp, area: Rect) -> u16 {
     let base_height = composer::line_count(app, layout::inner_width(area))
         .saturating_add(2)
-        .clamp(
-            3,
-            area.height
-                .saturating_sub(1)
-                .max(3)
-                .min(layout::COMPOSER_MAX_HEIGHT),
-        );
+        .clamp(3, layout::COMPOSER_MAX_HEIGHT);
     base_height
         .saturating_add(aux_panel_height(app))
         .min(area.height.saturating_sub(1).max(3))
@@ -853,7 +847,7 @@ fn centered_popup_area(base_area: Rect, desired_height: u16, item_count: usize) 
 }
 
 fn onboarding_popup_area(base_area: Rect, desired_height: u16) -> Rect {
-    let width = base_area.width.min(ONBOARDING_OVERLAY_WIDTH).max(56);
+    let width = base_area.width.clamp(56, ONBOARDING_OVERLAY_WIDTH);
     let y = base_area.y.saturating_add(BRAND_HEADER_HEIGHT);
     let available_height = base_area
         .height

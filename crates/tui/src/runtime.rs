@@ -483,9 +483,7 @@ impl TuiApp {
 
         if self.onboarding_base_url_pending {
             let base_url = prompt.trim();
-            if !base_url.is_empty()
-                && !(base_url.starts_with("http://") || base_url.starts_with("https://"))
-            {
+            if !(base_url.is_empty() || base_url.starts_with("http://") || base_url.starts_with("https://")) {
                 self.status_message = "Base URL must start with http:// or https://".to_string();
                 self.onboarding_prompt = Some("base url".to_string());
                 return Ok(());

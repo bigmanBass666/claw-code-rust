@@ -1,4 +1,4 @@
-use std::{path::PathBuf, time::Duration};
+use std::{path::{Path, PathBuf}, time::Duration};
 
 use anyhow::{Context, Result};
 use tokio::{
@@ -657,7 +657,7 @@ async fn run_worker_inner(
 
 async fn ensure_session_started(
     client: &mut StdioServerClient,
-    cwd: &PathBuf,
+    cwd: &Path,
     model: &str,
     session_id: &mut Option<SessionId>,
 ) -> Result<EnsureSessionOutcome> {
@@ -670,7 +670,7 @@ async fn ensure_session_started(
 
     let session = client
         .session_start(SessionStartParams {
-            cwd: cwd.clone(),
+            cwd: cwd.to_path_buf(),
             ephemeral: false,
             title: None,
             model: Some(model.to_string()),
@@ -684,13 +684,13 @@ async fn ensure_session_started(
 }
 
 async fn spawn_client(
-    cwd: &PathBuf,
+    cwd: &Path,
     env: Vec<(String, String)>,
     server_log_level: Option<String>,
 ) -> Result<StdioServerClient> {
     StdioServerClient::spawn(StdioServerClientConfig {
         program: std::env::current_exe().context("resolve current executable for server launch")?,
-        workspace_root: Some(cwd.clone()),
+        workspace_root: Some(cwd.to_path_buf()),
         env,
         args: server_log_level
             .into_iter()
