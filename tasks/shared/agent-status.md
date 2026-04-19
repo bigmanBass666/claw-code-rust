@@ -9,8 +9,8 @@
 |-------|----------|----------|----------|
 | Planner | 2026-04-19 | 沉睡 | 用户手动 |
 | Coordinator | 2026-04-19 | 活跃 | - |
-| Worker-001 | 2026-04-19 | 活跃 | - |
-| Worker-002 | 2026-04-19 | 活跃 | - |
+| Worker-001 | 2026-04-19 | 沉睡 | Coordinator |
+| Worker-002 | 2026-04-19 | 沉睡 | Coordinator |
 | Worker-003 | 2026-04-19 | 沉睡 | Coordinator |
 | PR Manager | - | 未启动 | Worker |
 | Maintainer | - | 未启动 | 自动触发(3任务/24h/连续失败) |
@@ -26,8 +26,8 @@
 | 任务ID | 描述 | 状态 | 负责人 | 优先级 | 创建时间 |
 |--------|------|------|--------|--------|----------|
 | TASK-009 | 配置 upstream 远程仓库 | completed | Coordinator | P0 | 2026-04-19 |
-| TASK-010 | 修复 CJK 文本 panic（Issue #36） | assigned | Worker-001 | P0 | 2026-04-19 |
-| TASK-011 | 重新提取 Windows UNC path 修复为干净分支 | assigned | Worker-002 | P1 | 2026-04-19 |
+| TASK-010 | 修复 CJK 文本 panic（Issue #36） | blocked | Worker-001 | P0 | 2026-04-19 |
+| TASK-011 | 重新提取 Windows UNC path 修复为干净分支 | blocked | Worker-002 | P1 | 2026-04-19 |
 | TASK-012 | 清理远程分支 | assigned | Worker-003 | P2 | 2026-04-19 |
 
 ---
