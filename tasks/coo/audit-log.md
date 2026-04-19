@@ -10,6 +10,7 @@
 | 2026-04-19 | 元数据层重构（valveos-metadata-layer spec） | 全系统元数据架构 | 见下方详情 | 10+ 文件改动 | ✅ 完成 |
 | 2026-04-19 | 遗留项修复（fix-backlog-items spec） | 3 个遗留 P1 + 用户指南重写 | 见下方详情 | 7 文件改动 | ✅ 完成 |
 | 2026-04-19 | AGENTS.md 路由化重构（agents-md-router-refactor spec） | AGENTS.md 从静态定义改为触发→动作路由表 | 见下方详情 | 1 文件改动 | ✅ 完成 |
+| 2026-04-19 | 路由化深度加固（harden-router-system spec） | 路由系统免疫系统加固 | 见下方详情 | 6 文件改动 | ✅ 完成 |
 
 ### 2026-04-19 评估详情
 
@@ -94,5 +95,27 @@
 
 **审计发现并即时修复**:
 - P1: 单会话模式路由目标原指向 `ARCHITECTURE.md#单会话模式`（该章节不存在于此文件）→ 修正为 `coo/instructions.md#单会话模式`
+
+**最终审计结果**: 0 P0 / 0 P1 / 0 P2 ✅
+
+### 2026-04-19 路由化深度加固
+
+**触发原因**: 路由化重构后的 5 个加固方向——审计 skill 路由目标检查、路由所有权约定、章节分类原则、速查行指引、fallback 路由。
+
+**核心改动**:
+1. **审计 skill P1 #13** — 新增路由目标存在性检查（Step 2.5），验证 AGENTS.md 每个路由动作引用的文件和章节是否真实存在
+2. **SYSTEM-MANIFEST.md 路由所有权** — 所有权约定表新增"AGENTS.md 路由条目"行 + 路由覆盖原则注
+3. **SYSTEM-MANIFEST.md 章节分类原则** — 新增"## AGENTS.md 章节分类原则"章节，文档化可路由化 vs 不可路由化的二分法
+4. **AGENTS.md 速查行指引** — 路由表头部加速查行质量约束注
+5. **AGENTS.md fallback 路由** — 新增"❓ 不确定时"路由条目
+
+**审计发现并修复**:
+- P1: AGENTS.md 路由表使用缩写路径（`SYSTEM-MANIFEST.md` 缺 `tasks/` 前缀、`cli-operations.md` 缺 `docs/agent-rules/` 前缀）→ 统一为完整路径
+- P1: Coordinator instructions 待机模式使用 while 循环，与 cli-operations.md 规范矛盾 → 改为单次 sleep + 警告
+- P1: PR Manager instructions 待机模式使用 while 循环，同上 → 改为单次 sleep + 警告
+- P2: ARCHITECTURE.md 目录树缺 SYSTEM-MANIFEST.md/README.md/multi-agent-user-guide.md → 已补充
+- P2: ARCHITECTURE.md 文件清单表缺 SYSTEM-MANIFEST.md/README.md/multi-agent-user-guide.md → 已补充
+- P2: AGENTS.md 路径风格不统一 → 随 P1-1 一起修复
+- P2: tasks/README.md 目录结构缺 SYSTEM-MANIFEST.md 和 coo/ → 已补充
 
 **最终审计结果**: 0 P0 / 0 P1 / 0 P2 ✅

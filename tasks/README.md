@@ -8,6 +8,7 @@
 ```
 tasks/
 ├── ARCHITECTURE.md          ← ValveOS 完整架构文档
+├── SYSTEM-MANIFEST.md       ← 元数据唯一事实来源
 ├── multi-agent-user-guide.md ← 用户操作指南
 ├── planner/                  ← 决策者工作区
 ├── coordinator/              ← 管理员工作区
@@ -15,6 +16,7 @@ tasks/
 ├── pr-manager/               ← PR管理员工作区
 ├── maintainer/               ← 维护者工作区
 ├── housekeeper/              ← 仓库守护工作区
+├── coo/                      ← 首席系统官工作区
 ├── logs/                     ← 运行日志
 └── shared/                   ← 共享资源
     ├── inbox/                ← Agent消息收件箱（通信总线）

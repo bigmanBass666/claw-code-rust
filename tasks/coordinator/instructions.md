@@ -296,13 +296,26 @@ Coordinator 可以待机等待 Planner 的任务下发消息。
 
 1. 更新 `tasks/shared/agent-status.md` 状态为"待机(等Planner消息)"
 2. 执行轮询等待：
+   ```powershell
+   Start-Sleep -Seconds 300
+   $hasMessage = Select-String -Path "tasks/shared/inbox/coordinator.md" -Pattern '未读' -Quiet
    ```
-   while ($true) {
-     Start-Sleep -Seconds 300
-     $hasMessage = Select-String -Path "tasks/shared/inbox/coordinator.md" -Pattern '未读' -Quiet
-     if ($hasMessage) { break }
-   }
-   ```
+
+### ⚠️ 不要用 while 循环
+
+```powershell
+# ❌ 错误 — 被杀后恢复困难，上下文浪费
+while ($true) { ... Start-Sleep ... }
+
+# ✅ 正确 — 单次 sleep，Agent 自主决定是否重调用
+Start-Sleep -Seconds 300
+```
+
+原因：
+1. while 循环被超时杀掉后，Agent 会话可能异常
+2. 循环日志持续消耗上下文窗口
+3. Agent 在循环期间无 AI 控制权，无法做决策
+
 3. 检测到未读消息 → 标记为已处理 → 读取消息 → 开始协调分配流程
 4. 无消息 → 继续等待
 

@@ -380,8 +380,11 @@ tasks/
 │   └── coo.md
 │   ├── agent-status.md  # Agent状态与任务追踪
 │   └── iteration-log.md # 迭代日志（断点续传）
-
-└── ARCHITECTURE.md       # 本文档
+│
+├── ARCHITECTURE.md       # 本文档
+├── SYSTEM-MANIFEST.md    # 元数据唯一事实来源
+├── README.md             # 运行时门牌
+├── multi-agent-user-guide.md # 用户操作指南
 ```
 
 ---
@@ -618,6 +621,9 @@ PR Manager 自动执行：
 | 文件路径 | 用途 | 是否纳入 Git |
 |----------|------|-------------|
 | `tasks/ARCHITECTURE.md` | 架构文档 | 是 |
+| `tasks/SYSTEM-MANIFEST.md` | 元数据唯一事实来源 | 是 |
+| `tasks/README.md` | 运行时门牌 | 是 |
+| `tasks/multi-agent-user-guide.md` | 用户操作指南 | 是 |
 | `tasks/planner/instructions.md` | Planner 规范 | 是 |
 | `tasks/planner/vision.md` | 项目愿景 | 是 |
 | `tasks/planner/observations.md` | 观察记录 | 是 |
