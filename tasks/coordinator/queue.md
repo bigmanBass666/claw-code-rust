@@ -22,7 +22,13 @@
 
 ## 待处理任务
 
-<!-- 新任务追加到这里 -->
+### TASK-013: 同步本地 main 到 upstream/main
+- **优先级**: P0
+- **描述**: 将本地 main 分支 rebase 到 `upstream/main`，同步上游最新代码（包括 UNC path 修复、null array fix、log-level fix 等），同时保留 ValveOS 文件
+- **期望结果**: 本地 main 包含上游最新代码 + ValveOS 文件，编译通过
+- **值得提 PR**: 否
+- **依赖**: 无
+- **注意**: rebase 可能产生冲突（ValveOS 文件与上游不冲突，但 Cargo.toml 等可能冲突）。Worker 必须使用 worktree 操作
 
 ---
 
