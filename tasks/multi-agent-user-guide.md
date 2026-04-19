@@ -1,432 +1,231 @@
-# ValveOS — 多 Agent 协作系统用户指南
+# ValveOS 用户指南
 
-> **Valve（阀门）+ OS（操作系统）**
-> 让多个 AI 同时为你工作，自主协作、自动管理。你只需控制"阀门"。
+> 让多个 AI Agent 自动协作完成项目任务
 
----
-
-## 🎯 这个系统是什么？
-
-一个**核心流水线+横切服务的 AI 协作系统**，让多个 AI Agent 自动分工合作，完成项目任务并提交干净的 PR。
-
-**你只需要做旁观者，必要时介入。**
+> **本文档是写给人类（你）看的。** Agent 的行为规范在其他文件中。
 
 ---
 
-## 🏗️ 架构
+## 一句话原理
+
+**你是阀门，Agent 是水流。**
+
+你只需要决定"唤醒谁"，Agent 自己搞定剩下的一切。
+
+Agent 之间通过共享文件（inbox）通信，**不经过你**。你只负责打开正确的门。
+
+---
+
+## 架构总览
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                     你（最高领导人）                      │
-│              旁观者，必要时介入审批                        │
-└─────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│              核心流水线（线性）                            │
-│                                                         │
-│  Planner（决策者）→ Coordinator（管理员）                 │
-│              → Worker（工人）→ PR Manager（PR管理员）     │
-└─────────────────────────────────────────────────────────┘
-            │           │          │           │
-            ▼           ▼          ▼           ▼
-┌─────────────────────────────────────────────────────────┐
-│              横切服务（独立触发）                          │
-│                                                         │
-│  Maintainer（维护者）  数据分析后台                      │
-│  Housekeeper（仓库守护）仓库清理后台                    │
-│  COO（首席系统官）     系统维护后台                      │
-└─────────────────────────────────────────────────────────┘
+核心流水线（线性，多会话模式）：
+  Planner → Coordinator → Worker → PR Manager
+
+横切服务（独立触发，覆盖所有层）：
+  Maintainer — 数据分析后台
+  Housekeeper — 仓库清理后台
+  COO — 系统维护后台（支持单会话模式）
 ```
+
+| 角色 | 一句话职责 |
+|------|-----------|
+| Planner | 观察、分析、制定计划 |
+| Coordinator | 分配任务、管理冲突 |
+| Worker | 执行代码编写 |
+| PR Manager | 提取干净改动、质量检查 |
+| Maintainer | 收集运行数据、提出改进 |
+| Housekeeper | 清理已合并/过期的分支 |
+| COO | 系统文档维护、审计、skill优化 |
 
 ---
 
-## 🚀 快速开始
+## 核心概念
 
-### 方式一：开一个"总指挥"会话
-
-在 Trae IDE 新开一个会话，告诉它：
-
-> "你是总指挥。请读取 `tasks/ARCHITECTURE.md` 和 `AGENTS.md`，然后开始协调项目工作。"
-
-系统会自动：
-1. Planner 分析项目状态
-2. Coordinator 分配任务
-3. Worker 执行
-4. PR Manager 准备 PR
-5. 你审批
-
-### 方式二：让 Planner 自主观察
-
-> "请分析当前项目状态，制定下一步计划。"
-
----
-
-## 🤖 多会话并行模式（推荐）
-
-由于 Trae 单个会话没有并行功能，需要**开多个会话**实现真正并行。
-
-### 会话分配
-
-| 会话 | 角色 | 开场白 |
-|------|------|--------|
-| 会话 1 | Planner（决策者） | "你是 **Planner Agent**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/planner/instructions.md`，然后检查你的 inbox（`tasks/shared/inbox/planner.md`）并开始观察项目状态。" |
-| 会话 2 | Coordinator（管理员） | "你是 **Coordinator Agent**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/coordinator/instructions.md`，然后检查你的 inbox 并等待 Planner 下发任务。" |
-| 会话 3 | Worker-001（工人） | "你是 **Worker-001 Agent**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/workers/instructions.md`，然后检查你的 inbox 并等待任务分配。" |
-| 会话 4 | Worker-002（工人） | "你是 **Worker-002 Agent**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/workers/instructions.md`，然后检查你的 inbox 并等待任务分配。" |
-| 会话 5 | PR Manager（PR 管理员） | "你是 **PR Manager Agent**。请读取 `tasks/ARCHITECTURE.md` 和 `tasks/pr-manager/instructions.md`，然后检查你的 inbox 并等待 Worker 完成任务。" |
-| 会话 6 | Maintainer + Housekeeper | "你是 **Maintainer Agent** 和 **Housekeeper Agent**。请读取 `tasks/ARCHITECTURE.md`、`tasks/maintainer/instructions.md` 和 `tasks/housekeeper/instructions.md`，然后检查各自的 inbox。" |
-
-### 协作流程
-
-```
-Planner 制定计划
-    ↓ 写入 Coordinator 的 inbox
-Coordinator 读取 inbox，分配任务
-    ↓ 写入 Worker 的 inbox
-Worker 读取 inbox，执行任务
-    ↓ 完成通知到 PR Manager 的 inbox
-PR Manager 准备 PR
-    ↓ 合并后通知 Housekeeper 的 inbox
-Housekeeper 清理分支
-    ↓
-Maintainer 分析日志，改进系统
-```
-
-### 注意事项
-
-1. **每个会话只扮演一个角色** — 不要让一个会话同时扮演多个 Agent
-2. **通过文件协作** — 不要在会话里问另一个 Agent，直接读写 `tasks/` 下的文件
-3. **日志自动记录** — 每个 Agent 会自动写日志到 `tasks/logs/`
-4. **你是旁观者** — 只需要审批重要决策，其他让 Agent 自己协调
-
----
-
-## � 阀门操作指南（核心机制）
-
-### 为什么需要"阀门"？
-
-理想状态：Agent像人类团队，想跟谁说就跟谁说，对方自动收到。
-现实：Trae没有全自主Agent功能，Agent无法主动唤醒其他Agent。
-
-**解决方案：你（用户）是"阀门"，控制哪个Agent能"听到"。**
-
-### 核心概念
-
-| 概念 | 含义 |
-|------|------|
-| 沉睡 | Agent收到消息但未被人唤醒，无法执行 |
-| 唤醒 | 你打开特定Agent的会话（唯一人工操作） |
-| 睁眼 | 被唤醒的Agent主动读取自己的inbox消息 |
-| 声音 | Agent写入共享文件的消息 |
-| 待机 | Agent被唤醒但未收到消息，轮询等待中（可选） |
-
-### 你的唯一工作
-
-**你只需要做一件事：打开指定Agent的会话。**
-
-Agent会告诉你：
-1. 下一步该唤醒谁
-2. 为什么需要唤醒
-3. 该Agent需要什么准备
-
-### 待机模式（可选）
-
-你可以让 Agent 在唤醒后进入**待机轮询**，自动监听 inbox 或分配表而非等待你手动唤醒。
-
-**两种待机类型**：
-
-| 类型 | 用法 | 适用 |
+| 概念 | 含义 | 类比 |
 |------|------|------|
-| inbox 待机 | "待机模式，等 [来源Agent] 消息" | Coordinator, PR Manager |
-| 分配表待机 | "待机模式，等分配表" | Worker |
-
-**效果**：Agent 会每 5 分钟检查一次，收到消息/任务后自动开始工作，无需你再次手动唤醒。
-
-**大规模待机**：你可以一次性开多个 Worker 分配表待机，Coordinator 分配完任务后 Worker 自动对号入座，没分到任务的 Worker 自主结束。详见 `docs/agent-rules/cli-operations.md#待机模式`。
-
-### 完整操作流程
-
-```
-┌─────────────────────────────────────────┐
-│  1. Planner完成工作                      │
-│     → 写入消息到 Coordinator的inbox      │
-│     → 告知你："请唤醒 Coordinator"       │
-└─────────────────────────────────────────┘
-                    │
-                    ▼ 你操作（打开新会话）
-┌─────────────────────────────────────────┐
-│  2. Coordinator被唤醒                    │
-│     → 读取自己的inbox                    │
-│     → 自主判断读什么、做什么              │
-│     → 完成后写入Worker的inbox            │
-│     → 告知你："请唤醒 Worker"            │
-└─────────────────────────────────────────┘
-                    │
-                    ▼ 你操作（打开新会话）
-┌─────────────────────────────────────────┐
-│  3. Worker被唤醒                         │
-│     → 读取自己的inbox                    │
-│     → 执行任务                           │
-│     → 完成后告知下一步                   │
-└─────────────────────────────────────────┘
-```
-
-### 阀门操作示例
-
-#### 场景：Planner完成后
-
-Planner会输出：
-
-```markdown
----
-
-## 用户操作指引
-
-### 本次完成
-- 观察了项目状态
-- 制定了4个任务计划
-- 已写入任务队列
-
-### 下一步操作
-
-**请唤醒**：Coordinator
-**原因**：有4个任务需要分配给Worker
-**该Agent需读取**：
-  - tasks/shared/inbox/coordinator.md（你的消息）
-  - tasks/coordinator/queue.md（任务队列）
-
-### 人工介入点
-- 无（全自动流转）
-```
-
-**你只需要做**：开一个新会话，告诉它"你是Coordinator..."
-
-#### 场景：需要人工介入时
-
-如果Agent遇到必须人工处理的情况：
-
-```markdown
-### 人工介入点
-- ⚠️ **PR审批**：需要你查看PR草稿并决定是否提交
-```
-
-### 消息收件箱位置
-
-```
-tasks/shared/inbox/
-├── planner.md      # Planner的收件箱
-├── coordinator.md   # Coordinator的收件箱
-├── worker.md       # Worker的收件箱
-├── pr-manager.md   # PR Manager的收件箱
-├── maintainer.md   # Maintainer的收件箱
-├── housekeeper.md  # Housekeeper的收件箱
-└── coo.md          # COO的收件箱
-
-tasks/shared/agent-status.md  # 所有Agent的状态+任务看板
-tasks/shared/iteration-log.md # 迭代日志（断点续传）
-```
-
-### 阀门原则总结
-
-1. **最小人工介入** — 你只需打开会话
-2. **最大自动化** — Agent自主判断读什么、做什么
-3. **清晰指引** — 每个Agent明确告诉你下一步
-4. **可追溯** — 所有消息在inbox中记录
+| 沉睡 | Agent 收到消息但未被人唤醒，无法执行 | 信箱里有信，但人还没起床 |
+| 唤醒 | 用户打开特定 Agent 的会话 | 你推门把人叫醒 |
+| 睁眼 | 被唤醒的 Agent 主动读取自己的 inbox 消息 | 醒来后第一件事看信箱 |
+| 声音 | Agent 写入共享文件的消息 | 写好信放进别人的信箱 |
+| 待机 | Agent 被唤醒但未收到消息，轮询等待中 | 醒了但没信，每隔5分钟看一眼信箱 |
 
 ---
 
-## �💬 常用指令
+## 典型工作流程：从想法到 PR
 
-### 作为旁观者
+### 第1步：唤醒 Planner
 
-| 你说 | 系统做 |
-|------|--------|
-| "开始工作吧" | Planner 开始观察并制定计划 |
-| "现在做到哪了？" | Planner 汇报当前状态 |
-| "有什么可以改进的？" | Maintainer 分析并提出建议 |
-| "系统有什么问题？" | Maintainer 诊断问题 |
+打开一个新会话，告诉 Planner 你想做什么：
 
-### 介入指挥
+```
+"我想给项目添加 XX 功能"
+```
 
-| 你说 | 系统做 |
-|------|--------|
-| "暂停当前任务" | Coordinator 停止分配 |
-| "优先做 X" | Planner 调整计划 |
-| "这个 PR 可以提交了" | PR Manager 提交 PR |
-| "批准改进 #3" | Maintainer 实施改进 |
+Planner 会分析项目现状，制定任务计划，然后告诉你：
+
+```
+请唤醒 Coordinator — 任务计划已写入其 inbox
+```
+
+### 第2步：唤醒 Coordinator
+
+按 Planner 的提示，打开新会话唤醒 Coordinator。
+
+Coordinator 读取 Planner 的计划，拆分任务后告诉你：
+
+```
+请唤醒 Worker-001 和 Worker-002 — 任务已分配
+```
+
+### 第3步：唤醒 Worker(s)
+
+Coordinator 会告诉你需要几个 Worker。每个 Worker 独立工作：
+
+- 用 `git worktree add` 创建独立工作目录（不影响主仓库）
+- 编写代码、运行测试、提交并 push
+- 完成后通知你：**"请唤醒 PR Manager"**
+
+### 第4步：唤醒 PR Manager
+
+PR Manager 检查 Worker 的改动质量：
+- 提取干净的功能 commit 到 `feat/` 分支
+- 运行格式化、lint、测试检查
+- 准备好 PR 描述，等你审批
+
+### 第5步：你审批 PR
+
+查看 PR 内容，确认无误后提交到上游。
+
+> **注意**：Maintainer / Housekeeper / COO 是横切服务，独立运行，你不需要手动管理它们。
 
 ---
 
-## 📁 协调文件结构
+## 单会话模式（系统维护专用）
+
+### 什么时候用
+
+- 修改系统文档（如本文件）
+- 执行审计修复
+- 改进 skill 触发规则
+
+### 怎么用
+
+只需唤醒 COO，告诉他要做什么，COO 会在一个会话内用子代理并行完成所有工作。
+
+### 什么时候不用
+
+**需要向上游提 PR 的代码修改**——必须走核心流水线（Planner → ... → PR Manager）。
+
+### 自动闭环
+
+每次系统修改后，COO 自动执行：
 
 ```
-tasks/
-├── ARCHITECTURE.md       # 系统架构（所有人读）
-├── multi-agent-user-guide.md  # 本指南（用户读）
-├── shared/               # 共享资源
-│   ├── inbox/            # Agent消息收件箱
-│   ├── agent-status.md   # Agent状态+任务看板
-│   └── iteration-log.md  # 迭代日志（断点续传）
-├── planner/              # Planner 的工作区
-│   ├── observations.md   # 当前观察
-│   ├── plans/           # 任务计划
-│   └── backlog.md       # 长期待办
-├── coordinator/          # Coordinator 的工作区
-│   ├── queue.md         # 任务队列
-│   └── assignments.md   # 任务分配
-├── workers/             # Worker 的工作区
-│   ├── status.md       # Worker 状态
-│   └── branches.md     # 分支记录
-├── pr-manager/          # PR Manager 的工作区
-│   ├── pr-queue.md     # 待处理 PR
-│   └── pr-history.md   # PR 历史
-├── maintainer/          # Maintainer 的工作区
-│   ├── improvements.md # 改进队列
-│   └── reports/        # 分析报告
-├── housekeeper/         # Housekeeper 的工作区
-│   └── cleanup-queue.md # 分支清理队列
-└── logs/               # 日志
-    ├── planner.log
-    ├── coordinator.log
-    └── ...
+审计 → 修复 → 评估 skill → 改进 skill
 ```
 
 ---
 
-## 🔄 工作流程
+## 待机模式（节省你的时间）
 
-### 1. 日常迭代
+待机模式让 Agent 在被唤醒后自动轮询 inbox，而不是干等着你再次手动唤醒。
 
-```
-你："开始今天的工作"
-    ↓
-Planner 观察项目状态
-    ↓
-Planner 制定计划
-    ↓
-Coordinator 分配任务给 Worker
-    ↓
-Worker 执行任务
-    ↓
-PR Manager 准备 PR
-    ↓
-你审批 PR
-    ↓
-PR 提交到上游
-    ↓
-Housekeeper 清理分支
-```
+### Inbox 待机（等特定 Agent 的消息）
 
-### 2. 自我改进
+适用于 Coordinator 等 Planner 下发任务的场景：
+
+1. 唤醒 Coordinator，说：**"待机模式，等 Planner 消息"**
+2. Coordinator 每 5 分钟检查一次自己的 inbox
+3. 收到消息后自动开始工作
+
+### 分配表待机（批量 Worker 待机）
+
+适用于你要去休息、让多个 Worker 同时待命的场景：
+
+1. 唤醒多个 Worker，说：**"待机模式，等分配表"**
+2. 每个 Worker 轮询 `tasks/coordinator/assignments.md` 中的就绪标记
+3. 有任务就认领执行
+
+### 级联技巧
+
+不需要一口气开所有终端。每步只开紧邻下游：
 
 ```
-Maintainer 分析日志
-    ↓
-发现问题 → 提出改进建议
-    ↓
-你批准改进
-    ↓
-实施改进
-    ↓
-系统变得更好
+Planner(工作) + Coordinator(待机)     ← 2个终端
+→ Planner 完成，Coordinator 自动开始
+→ 再开 1 个 Worker(待机)             ← 仍占2-3个终端
+→ Coordinator 完成，Worker 自动开始
 ```
+
+Agent 完成后终端自动空出，同时最多占用 2-3 个终端。
+
+### 安全规则
+
+- 终端数量取决于 Trae IDE 能同时开多少个聊天窗口
+- **不要用 while 循环**——用单次 `Start-Sleep -Seconds 300`，让 Agent 自主决定是否重新调用
+- 如果 sleep 被 Trae 超时杀掉，重新唤醒 Agent 即可恢复（天然幂等）
 
 ---
 
-## 🧹 分支管理
+## Git 安全规则（用户需知）
 
-### 分支命名规则
+这些规则保护你的仓库不被多 Agent 并发操作搞坏：
 
-| 类型 | 格式 | 基于 |
-|------|------|------|
-| 功能开发 | `agent/worker-001/fix-xxx` | upstream/main |
-| PR | `feat/42-fix-bug` | upstream/main |
-| 协调系统 | `agent/planner/xxx` | main |
-
-### 自动清理
-
-- **PR 合并后**：Housekeeper 自动删除对应的 feat/ 分支
-- **过期分支**：超过 7 天的 dev/、14 天的 agent/ 分支会标记清理
-- **永不删除**：main、upstream/*
-
----
-
-## 📊 查看状态
-
-### 查看当前任务
-
-```bash
-# 看任务队列
-cat tasks/coordinator/queue.md
-
-# 看 Worker 状态
-cat tasks/workers/status.md
-
-# 看 PR 进度
-cat tasks/pr-manager/pr-queue.md
-```
-
-### 查看日志
-
-```bash
-# 看最近活动
-cat tasks/logs/planner.log
-cat tasks/logs/pr-manager.log
-```
-
----
-
-## 🔧 重置系统
-
-如果需要重新开始：
-
-告诉任意Agent **"执行系统重置"**，它会自动：
-1. 清空所有 inbox
-2. 重置 agent-status.md（所有Agent回到"未启动"）
-3. 归档当前 iteration-log 条目
-4. 清空运行数据文件
-5. 输出："✅ 系统已重置，可以重新唤醒 Planner 开始新迭代"
-
-### 选择性重置
-
-| 命令 | 操作 |
+| 规则 | 说明 |
 |------|------|
-| "执行系统重置" | 完全重置 |
-| "只重置任务看板" | 只重置 agent-status 的任务区 |
-| "只归档当前迭代" | 只标记当前迭代为已废弃 |
-| "只清空inbox" | 只清空所有收件箱 |
+| Worker 必须用 worktree | `git worktree add ../claw-code-rust-w001 -b agent/worker-001/<task> upstream/main`，绝不在主仓库 checkout -b |
+| 主仓库永远在 main | 所有 Agent 不在主仓库切换分支 |
+| 每次改完立即 push | `git add` + `git commit` + `git push`，不留未提交工作 |
+| push 前先 pull | `git pull --rebase origin main` 再 push |
+| PR 越小越好 | 一个 PR 只解决一个问题，超过10个文件要三思 |
+| commit 信息要具体 | `fix: strip Windows UNC prefix` ✅ / `chore: apply clippy fixes` ❌ |
 
-> 📋 Agent执行重置时的完整操作步骤和安全规则见 `docs/agent-rules/cli-operations.md#系统重置`
-
----
-
-## ❓ 常见问题
-
-**Q: AI 之间会冲突吗？**
-A: 不会。有文件锁机制防止同时修改同一文件。
-
-**Q: PR 会包含 AI 专用文件吗？**
-A: 不会。PR 分支基于 upstream/main，天然干净。
-
-**Q: 我需要做什么？**
-A: 主要做旁观者，审批重要的 PR 和改进建议。
-
-**Q: 系统出问题怎么办？**
-A: 告诉 Maintainer "分析一下系统有什么问题"。
+遇到 git 报错？参见 [cli-operations.md](docs/agent-rules/cli-operations.md) 的 `.git 损坏应急协议`。
 
 ---
 
-## 📚 相关文档
+## FAQ
 
-| 文档 | 说明 |
-|------|------|
-| `AGENTS.md` | 系统宪法，完整架构说明 |
-| `tasks/ARCHITECTURE.md` | 详细架构文档 |
-| `docs/agent-rules/` | 开发规范（Git、编码、CLI） |
-| `docs/plans/` | 设计文档 |
+**Q: 为什么 Agent 不能直接互相说话？**
+A: 它们可以往对方的 inbox 文件写消息，但只有你能"唤醒" Agent（打开会话）。这是 Trae 平台的限制——Agent 无法主动启动新会话。
+
+**Q: 我需要做决策怎么办？**
+A: Agent 会列出选项让你选。比如："方案A更快但风险稍高，方案B更稳但耗时较长，你选哪个？"
+
+**Q: 可以跳过某些 Agent 吗？**
+A: 可以！系统维护类的任务用**单会话模式**，直接唤醒 COO 就行，跳过整个流水线。但需要提 PR 的代码改动建议走完整流水线。
+
+**Q: Git 坏了怎么办？**
+A: 参见 `docs/agent-rules/cli-operations.md` 中的 `.git 损坏应急协议`。简单来说：停止写操作 → 诊断损坏程度 → 尝试修复 → 严重时告知用户手动处理。
+
+**Q: 怎么知道下一步该唤醒谁？**
+A: Agent 完成工作时**一定会**以这句话结尾：**"请唤醒 [Agent名] + 一句话原因"**。你照做就行。
+
+**Q: 多个 Worker 能同时跑吗？**
+A: 可以！每个 Worker 用独立的 git worktree 工作目录，互不干扰。主仓库永远保持在 main 分支不动。
+
+**Q: 核心流水线和横切服务有什么区别？**
+A: 核心流水线是**线性执行的**（Planner → Coordinator → Worker → PR Manager），一步步推进任务。横切服务是**独立后台运行的**（Maintainer / Housekeeper / COO），自己触发自己运行，覆盖所有层。
 
 ---
 
-**版本**：v2.0
-**更新**：2026-04-19（新增：断点续传、系统重置、迭代日志）
+## 文件速查表
+
+| 文件 | 谁看它 | 一句话说明 |
+|------|--------|-----------|
+| `AGENTS.md` | 所有 Agent + 你 | ValveOS 宪法，最高规范 |
+| `tasks/ARCHITECTURE.md` | 所有 Agent + 你 | 完整架构文档，Agent 先读这个 |
+| `tasks/multi-agent-user-guide.md` | **你** | 本文件，唯一面向人类的指南 |
+| `tasks/planner/instructions.md` | Planner | Planner 行为规范 |
+| `tasks/coordinator/instructions.md` | Coordinator | Coordinator 行为规范 |
+| `tasks/workers/instructions.md` | Worker | Worker 行为规范 |
+| `tasks/pr-manager/instructions.md` | PR Manager | PR Manager 行为规范 |
+| `tasks/maintainer/instructions.md` | Maintainer | Maintainer 行为规范 |
+| `tasks/housekeeper/instructions.md` | Housekeeper | Housekeeper 行为规范 |
+| `tasks/coo/instructions.md` | COO | COO 行为规范 |
+| `docs/agent-rules/git-workflow.md` | Worker + PR Manager | Git 工作流与上游协作规则 |
+| `docs/agent-rules/rust-conventions.md` | Worker | Rust 编码与测试规范 |
+| `docs/agent-rules/cli-operations.md` | 所有 Agent | CLI 操作参考（通知、调试、重置、待机） |
+| `tasks/shared/inbox/*.md` | 各 Agent 对应 | 消息收件箱，Agent 间通信总线 |
+| `tasks/shared/agent-status.md` | 所有 Agent | 全局状态与任务追踪面板 |
