@@ -98,6 +98,14 @@
 
 Agent 可以在用户唤醒后进入**待机轮询**，主动监听 inbox 而非等待手动唤醒。
 
+### 待机模式类型总览
+
+| 类型 | 使用者 | 等待内容 | Inbox 文件 | 用户触发命令 |
+|------|--------|----------|------------|-------------|
+| **Coordinator Inbox 待机** | Coordinator | Planner 完成消息 | `inbox/coordinator.md` | "待机模式，等 Planner 消息" |
+| **Worker Dispatch 待机** | Worker | Coordinator 分配的任务 | `coordinator/assignments.md` | "待机模式，等任务分配" |
+| **PR Manager Inbox 待机** | PR Manager | Worker 完成消息 | `inbox/pr-manager.md` | "待机模式，等 Worker 消息" |
+
 ### 触发
 
 用户唤醒 Agent 时附加指令："待机模式，等 [来源Agent] 消息"
