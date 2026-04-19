@@ -67,7 +67,7 @@ cargo test --workspace
 #### Diff 清洁度检查
 ```bash
 # 检查是否包含 AI 专用文件
-git diff upstream/main --name-only | grep -E "^(tasks/|notifications/|\.trae/|AGENTS\.md|progress\.txt)"
+git diff upstream/main --name-only | grep -E "^(tasks/|notifications/|\.trae/|AGENTS\.md)"
 
 # 如果有输出，说明 diff 不干净！
 ```

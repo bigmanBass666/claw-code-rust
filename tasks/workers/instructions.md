@@ -356,3 +356,69 @@ chore: run cargo clippy --fix                         ❌ 太懒
 完成后必须更新 `tasks/shared/agent-status.md`：
 - 更新自己的状态为"沉睡"
 - 更新等待唤醒的Agent
+
+## 待机模式
+
+Worker 可以待机等待 Coordinator 的任务分配。
+
+### 触发方式
+
+用户唤醒 Worker 时附加指令："待机模式，等任务分配"
+
+### 工作流
+
+1. 更新 `tasks/shared/agent-status.md` 状态为"待机(等分配)"
+2. 更新 `tasks/workers/status.md` 状态为"standby"
+3. 执行轮询等待：
+   ```
+   Start-Sleep -Seconds 300
+   $assigned = Select-String -Path "tasks/coordinator/assignments.md" -Pattern 'Worker-XXX.*pending' -Quiet
+   ```
+4. 检测到自己的 Worker ID 对应 pending 状态的任务 → 认领并开始执行
+5. 无匹配 → 继续等待（重新执行步骤 3）
+
+### 与其他待机模式的区别
+
+| | Worker 分配表待机 | Coordinator inbox 待机 | PR Manager inbox 待机 |
+|---|---|---|---|
+| 轮询目标 | tasks/coordinator/assignments.md | inbox/coordinator.md | inbox/pr-manager.md |
+| 检测条件 | 自己的 Worker ID + pending 状态 | 任意未读消息 | 任意未读消息 |
+| 上游来源 | Coordinator | Planner | Worker |
+| 典型用途 | 等 Coordinator 任务分配 | 等 Planner 任务下发 | 等 Worker 完工通知 |
+
+### 待机命令
+
+```powershell
+Start-Sleep -Seconds 300
+```
+
+### 检查命令
+
+```powershell
+$assignmentPath = "项目路径/tasks/coordinator/assignments.md"
+Select-String -Path $assignmentPath -Pattern 'Worker-XXX.*pending' -Quiet
+```
+
+返回 `True` = 有分配给自己的待认领任务，返回 `False` = 无任务。
+
+### ⚠️ 不要用 while 循环
+
+```powershell
+# ❌ 错误 — 被杀后恢复困难，上下文浪费
+while ($true) { ... Start-Sleep ... }
+
+# ✅ 正确 — 单次 sleep，Agent 自主决定是否重调用
+Start-Sleep -Seconds 300
+```
+
+原因：
+1. while 循环被超时杀掉后，Agent 会话可能异常
+2. 循环日志持续消耗上下文窗口
+3. Agent 在循环期间无 AI 控制权，无法做决策
+
+### 超时恢复
+
+如果 Trae 超时杀掉了 sleep 命令：
+- 用户重新唤醒 Worker
+- Worker 读取 assignments.md → 有自己的 pending 任务就认领执行，没任务就继续待机
+- 天然幂等，无需特殊恢复逻辑

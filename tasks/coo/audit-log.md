@@ -8,6 +8,7 @@
 |------|----------|----------|----------|--------|------|
 | 2026-04-19 | skill-creator 正式评估（evaluate-audit-skill-dynamicity spec） | valveos-audit skill 动态性评估 | 见下方详情 | 3 项 skill 改进 | ✅ 完成 |
 | 2026-04-19 | 元数据层重构（valveos-metadata-layer spec） | 全系统元数据架构 | 见下方详情 | 10+ 文件改动 | ✅ 完成 |
+| 2026-04-19 | 遗留项修复（fix-backlog-items spec） | 3 个遗留 P1 + 用户指南重写 | 见下方详情 | 7 文件改动 | ✅ 完成 |
 
 ### 2026-04-19 评估详情
 
@@ -53,3 +54,19 @@
 **遗留 P1 问题（待后续处理）**:
 - ARCHITECTURE.md 缺少"标准开场白"章节（AGENTS.md 引用断裂）
 - Coordinator / Worker instructions 缺待机模式章节
+
+### 2026-04-19 遗留项修复
+
+**修复的 3 个遗留 P1**:
+1. **标准开场白章节** — 在 ARCHITECTURE.md L206 新建，7 个 Agent 完整表格。AGENTS.md L36 引用断裂修复。
+2. **Coordinator 待机章节** — coordinator/instructions.md L284-L323，格式与 pr-manager 对称
+3. **Worker 待机章节** — workers/instructions.md L359-L425，含 while 循环禁用警告
+
+**用户指南重写**: `tasks/multi-agent-user-guide.md`（~185 行），面向人类读者。fix-single-session-and-pr-standby Task 5 完成。
+
+**审计发现并即时修复**:
+- P0: pr-manager/instructions.md 残留 progress.txt 引用 → 已清除
+- P1: maintainer instructions 缺 coo.log 采集 → 已补充
+- P1: 用户指南缺核心概念表 → 已添加
+
+**全量审计结果**: 0 P0 / 0 P1 / 0 P2 ✅

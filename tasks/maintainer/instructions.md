@@ -42,6 +42,7 @@ COO（首席系统官）负责系统文档的维护和改进。Maintainer 不直
 - `tasks/logs/pr-manager.log` — PR Manager 处理记录
 
 - `tasks/logs/housekeeper.log` — Housekeeper 清理记录
+- `tasks/logs/coo.log` — COO 审计和维护记录
 
 同时查看：
 - `tasks/workers/status.md` — 当前状态

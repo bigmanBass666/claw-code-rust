@@ -281,3 +281,43 @@ Worker 完成任务后：
 完成后必须更新 `tasks/shared/agent-status.md`：
 - 更新自己的状态为"沉睡"
 - 更新等待唤醒的Agent
+
+---
+
+## 待机模式
+
+Coordinator 可以待机等待 Planner 的任务下发消息。
+
+### 触发方式
+
+用户唤醒 Coordinator 时附加指令："待机模式，等 Planner 消息"
+
+### 工作流
+
+1. 更新 `tasks/shared/agent-status.md` 状态为"待机(等Planner消息)"
+2. 执行轮询等待：
+   ```
+   while ($true) {
+     Start-Sleep -Seconds 300
+     $hasMessage = Select-String -Path "tasks/shared/inbox/coordinator.md" -Pattern '未读' -Quiet
+     if ($hasMessage) { break }
+   }
+   ```
+3. 检测到未读消息 → 标记为已处理 → 读取消息 → 开始协调分配流程
+4. 无消息 → 继续等待
+
+### 与其他待机模式的区别
+
+| | Coordinator inbox 待机 | PR Manager inbox 待机 | Worker 分配表待机 |
+|---|---|---|---|
+| 轮询目标 | inbox/coordinator.md | inbox/pr-manager.md | assignments.md |
+| 触发条件 | Planner 下发任务 | Worker 完工通知 | 自己的 Worker ID + ready |
+| 上游来源 | Planner | Worker | Coordinator |
+| 典型用途 | 等 Planner 任务下发 | 等 Worker 完工通知 | 等 Coordinator 任务分配 |
+
+### 超时恢复
+
+如果 Trae 超时杀掉了 sleep 命令：
+- 用户重新唤醒 Coordinator
+- Coordinator 读取 inbox → 有消息就工作，没消息就继续待机
+- 天然幂等，无需特殊恢复逻辑
