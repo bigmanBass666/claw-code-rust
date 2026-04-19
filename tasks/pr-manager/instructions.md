@@ -37,7 +37,7 @@ git diff upstream/main...origin/agent/worker-001/<task> --stat
 ```bash
 # 基于上游最新代码创建分支
 git fetch upstream
-git checkout -b feat/<description> upstream/main
+git worktree add ../claw-code-rust-pr -b feat/<description> upstream/main
 
 # 提取 Worker 的相关 commit
 git cherry-pick <commit-hash>

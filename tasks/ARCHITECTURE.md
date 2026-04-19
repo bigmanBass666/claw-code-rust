@@ -16,6 +16,7 @@
 - **PR Manager（PR 管理员）** — 提取干净改动、质量检查、准备 PR
 - **Maintainer（维护者）** — 分析运行日志，持续改进系统本身
 - **Housekeeper（仓库守护）** — 清理已合并/过期的分支，保持仓库整洁
+- **COO（首席系统官）** — 系统文档维护、审计、skill优化
 
 用户是最高领导人，一般情况下做旁观者，必要时介入。
 
@@ -144,6 +145,22 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 │                                                          │
 │  位置：tasks/housekeeper/                               │
 └─────────────────────────────────────────────────────────┘
+                           ▲
+                           │ 审计请求 / 文档改动
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│           COO Agent（首席系统官）                        │
+│                                                          │
+│  - 系统文档维护与一致性审计                               │
+│  - 每次 Agent 改动后执行文档审计                          │
+│  - 评估和优化 skill 触发规则                              │
+│  - 接收 Maintainer 的改进数据，写入改进计划               │
+│  - 记录运行日志到 tasks/logs/coo.log                    │
+│                                                          │
+│  触发条件：文档改动后 / Maintainer 提交数据时             │
+│                                                          │
+│  位置：tasks/coo/                                       │
+└─────────────────────────────────────────────────────────┘
 
          ┌────────────────────────────────┐
          │      日志系统 (tasks/logs/)    │
@@ -155,6 +172,7 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
          │  pr-manager.log PR Manager    │
          │  maintainer.log Maintainer    │
          │  housekeeper.log Housekeeper  │
+         │  coo.log        COO          │
          └────────────────────────────────┘
 ```
 
@@ -294,6 +312,10 @@ tasks/
 │   ├── instructions.md   # Housekeeper 行为规范
 │   └── cleanup-queue.md  # 分支清理队列
 │
+├── coo/                  # 【第七层】COO 专用
+│   ├── instructions.md   # COO 行为规范
+│   └── audit-log.md      # 审计日志
+│
 ├── logs/                  # 运行日志系统
 │   ├── README.md         # 日志格式说明
 │   ├── system.log        # 系统总日志
@@ -311,7 +333,8 @@ tasks/
 │   │   ├── worker.md
 │   │   ├── pr-manager.md
 │   │   ├── maintainer.md
-│   │   └── housekeeper.md
+│   │   ├── housekeeper.md
+│   └── coo.md
 │   ├── agent-status.md  # Agent状态与任务追踪
 │   └── iteration-log.md # 迭代日志（断点续传）
 
@@ -378,7 +401,7 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 
 6. Worker 执行
    a. git fetch upstream
-   b. git checkout -b agent/worker-001/task-xxx upstream/main
+   b. git worktree add ../claw-code-rust-w001 -b agent/worker-001/task-xxx upstream/main
    c. 编写代码、运行测试、提交
    d. push 到 origin
    e. 记录日志到 tasks/logs/workers.log
@@ -576,16 +599,21 @@ PR Manager 自动执行：
 | `tasks/logs/workers.log` | Worker 日志 | 可选 |
 | `tasks/logs/pr-manager.log` | PR Manager 日志 | 可选 |
 | `tasks/logs/maintainer.log` | Maintainer 日志 | 可选 |
+| `tasks/logs/housekeeper.log` | Housekeeper 日志 | 可选 |
+| `tasks/logs/coo.log` | COO 日志 | 可选 |
 | `tasks/shared/inbox/planner.md` | Planner收件箱 | 是 |
 | `tasks/shared/inbox/coordinator.md` | Coordinator收件箱 | 是 |
 | `tasks/shared/inbox/worker.md` | Worker收件箱 | 是 |
 | `tasks/shared/inbox/pr-manager.md` | PR Manager收件箱 | 是 |
 | `tasks/shared/inbox/maintainer.md` | Maintainer收件箱 | 是 |
 | `tasks/shared/inbox/housekeeper.md` | Housekeeper收件箱 | 是 |
+| `tasks/shared/inbox/coo.md` | COO收件箱 | 是 |
 | `tasks/shared/agent-status.md` | Agent状态与任务追踪 | 是 |
 | `tasks/shared/iteration-log.md` | 迭代日志（断点续传） | 是 |
 | `tasks/housekeeper/instructions.md` | Housekeeper 规范 | 是 |
 | `tasks/housekeeper/cleanup-queue.md` | 分支清理队列 | 是 |
+| `tasks/coo/instructions.md` | COO 规范 | 是 |
+| `tasks/coo/audit-log.md` | 审计日志 | 是 |
 
 ### 日志文件说明
 

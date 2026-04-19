@@ -166,7 +166,7 @@ Worker — 具体"执行"
 PR Manager — 提取干净改动、质量检查、准备 PR
     │ 日志+反馈
     ▼
-Maintainer — 分析日志、持续改进系统本身
+Maintainer — 收集运行数据、提出改进
     │ 分支清理任务（写Housekeeper的inbox）
     ▼
 Housekeeper — 清理已合并/过期的分支
@@ -183,7 +183,7 @@ COO（首席系统官）— 系统文档维护、审计、skill优化
 | **Coordinator** | 分配任务、管理冲突 | 管理分支生命周期 |
 | **Worker** | 执行代码编写 | 从 upstream/main 创建分支 |
 | **PR Manager** | 提取干净改动、质量检查 | 自动化 PR 质量验证 |
-| **Maintainer** | 分析运行日志、提出改进 | 持续优化系统本身 |
+| **Maintainer** | 收集运行数据、提出改进 | 数据采集员，写入COO inbox |
 | **Housekeeper** | 清理已合并/过期的分支 | 保持仓库整洁 |
 | **COO** | 系统文档维护、审计、skill优化 | 每次改动后审计+评估skill |
 

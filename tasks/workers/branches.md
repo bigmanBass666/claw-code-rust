@@ -36,7 +36,7 @@ Worker 完成任务后的交接流程：
 ## 使用说明
 
 1. Worker 开始任务前，在此表中登记分支信息
-2. 分支创建命令: `git checkout -b agent/xxx/description upstream/main`
+2. 分支创建命令: `git worktree add ../claw-code-rust-w<id> -b agent/xxx/description upstream/main`
 3. 任务完成后 push 到 origin，然后通过 inbox 通知 PR Manager
 4. 分支清理由 Housekeeper 在 PR 合并后执行
 

@@ -85,7 +85,7 @@ PR Manager ← 用户唤醒            提取干净PR
 3. Worker 开发
    a. 读取 inbox 发现任务
    b. git fetch upstream
-   c. git checkout -b agent/worker-001/fix-windows-unc upstream/main
+   c. git worktree add ../claw-code-rust-w001 -b agent/worker-001/fix-windows-unc upstream/main
    d. 编写代码、测试、提交
    e. push 到 origin
    f. 写入消息到 PR Manager 的 inbox
