@@ -34,7 +34,7 @@
 
 ### 读写 Inbox（消息收件箱）
 
-**位置**：`tasks/shared/inbox/[角色].md`（planner / coordinator / worker / pr-manager / maintainer / housekeeper）
+**位置**：`tasks/shared/inbox/[角色].md`（planner / coordinator / worker / pr-manager / maintainer / housekeeper / coo）
 
 **读取**：用 Read 工具读取自己的 inbox，检查"待处理消息"区
 **写入**：用 SearchReplace 向目标 Agent 的 inbox 添加消息行：
@@ -196,8 +196,10 @@ Agent会执行以下操作：
 5. **清空运行数据文件**（恢复模板）：
    - `tasks/planner/observations.md`
    - `tasks/coordinator/queue.md` + `assignments.md`
-   - `tasks/workers/status.md`
+   - `tasks/workers/status.md` + `branches.md`（清空分支记录）
    - `tasks/pr-manager/pr-queue.md`
+   - `tasks/maintainer/improvements.md`（改进状态改为 proposed 或删除已完成项）
+   - `tasks/coo/audit-log.md`（只保留表头，清空审计记录行）
    - `tasks/housekeeper/cleanup-queue.md`（保留清理历史）
 6. 输出："✅ 系统已重置，可以重新唤醒 Planner 开始新迭代"
 

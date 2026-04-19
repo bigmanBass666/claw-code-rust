@@ -29,9 +29,10 @@ git fetch upstream
 
 > **Housekeeper**：通常不需要独立分支，直接在 main 上操作 origin 远程分支（git push origin --delete）。如需记录清理操作，使用 `agent/housekeeper/cleanup-<date>` 基于 main。
 
-### 七层 Agent 流程（含 inbox 通信）
+### Agent 流程（含 inbox 通信）
 
 ```
+核心流水线：
 Planner → 写Coordinator的inbox → 用户唤醒Coordinator
    ↓                              ↓
  决策                           分配任务
@@ -41,10 +42,11 @@ Worker ← 读Worker的inbox ← 用户唤醒Worker
  执行代码                        完成通知到PR Manager inbox
                                   ↓
 PR Manager ← 用户唤醒            提取干净PR
-   ↓
-分析改进 → Maintainer
-   ↓
-分支清理 → Housekeeper
+
+横切服务（独立触发）：
+Maintainer   ← 数据分析后台
+Housekeeper  ← 仓库清理后台
+COO          ← 系统维护后台
 ```
 
 **关键**：Agent间通过 `tasks/shared/inbox/` 传递消息，用户作为"阀门"控制唤醒。
