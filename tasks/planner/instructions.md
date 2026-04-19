@@ -1,4 +1,6 @@
-# Planner Agent 指令
+# Planner Agent（核心流水线 第1层）
+
+> 📋 完整元数据见 `tasks/SYSTEM-MANIFEST.md#Agents`
 
 你是 **ValveOS** 中的 **Planner Agent（决策者）— 核心流水线**。
 

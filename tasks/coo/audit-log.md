@@ -7,6 +7,7 @@
 | 时间 | 触发来源 | 审计范围 | 发现问题 | 修复数 | 状态 |
 |------|----------|----------|----------|--------|------|
 | 2026-04-19 | skill-creator 正式评估（evaluate-audit-skill-dynamicity spec） | valveos-audit skill 动态性评估 | 见下方详情 | 3 项 skill 改进 | ✅ 完成 |
+| 2026-04-19 | 元数据层重构（valveos-metadata-layer spec） | 全系统元数据架构 | 见下方详情 | 10+ 文件改动 | ✅ 完成 |
 
 ### 2026-04-19 评估详情
 
@@ -29,9 +30,26 @@
 2. 精简"已知历史问题"表：移除已被动态基线覆盖的架构层数模式（五层/六层/七层）
 3. 新增 P2 #5: ARCHITECTURE.md 内部一致性检查（inbox 图 vs 目录树、日志列表 vs 目录树）
 
-**评估中发现的真实文档问题（非 skill 本身）**:
-- ARCHITECTURE.md 缺少"标准开场白"章节（AGENTS.md L45 引用断裂）
-- ARCHITECTURE.md inbox 结构图缺 coo.md（与目录树矛盾）
-- logs/README.md 缺 coo.log
-- PR Manager 待机 while 循环与 cli-operations.md 规范矛盾
-- Coordinator/Worker instructions 缺待机模式章节
+### 2026-04-19 元数据层重构
+
+**触发原因**: ValveOS "纯文档驱动/全硬编码"问题——Agent 列表在 ~10 处重复、架构模型在 ~8 处重复，每次变更需改 12+ 文件。
+
+**核心变更**: 引入 `tasks/SYSTEM-MANIFEST.md` 作为元数据唯一事实来源。
+
+**具体改动**:
+1. **新建 SYSTEM-MANIFEST.md** — 6 个章节（Agents / Architecture Model / Core Concepts / File Registry / Feature Index / 所有权约定）
+2. **AGENTS.md 精简** — 从 ~154 行降到 ~119 行，移除所有元数据表格（Agent 列表/功能索引/Git 追踪规则），保留纯宪法内容
+3. **ARCHITECTURE.md 更新** — 添加 4 处 Manifest 派生标注；修复 inbox 结构图缺 coo.md、目录树缺 coo.log
+4. **Audit Skill 增强** — 基线来源改为 SYSTEM-MANIFEST.md（主）；新增 P1 #12 所有权约定违反检测；核心文件清单动态读取
+5. **Instructions 标准化** — 7 个 Agent 的角色标签行统一格式 + Manifest 引用注
+6. **logs/README.md** — 补充 coo.log 条目
+
+**全量审计结果（重构后）**:
+- 🔴 P0: **0** ✅
+- 🟡 P1: 2（标准开场白章节缺失、Coordinator/Worker 缺待机章节 — 均为已知遗留）
+- 🟢 P2: 0（coo.log 相关已修复）
+- 所有权约定违反: **0** ✅
+
+**遗留 P1 问题（待后续处理）**:
+- ARCHITECTURE.md 缺少"标准开场白"章节（AGENTS.md 引用断裂）
+- Coordinator / Worker instructions 缺待机模式章节

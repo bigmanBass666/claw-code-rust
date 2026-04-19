@@ -1,4 +1,6 @@
-# Housekeeper Agent 指令
+# Housekeeper Agent（横切服务）
+
+> 📋 完整元数据见 `tasks/SYSTEM-MANIFEST.md#Agents`
 
 你是 **ValveOS** 中的 **Housekeeper Agent（仓库守护者）— 横切服务：仓库清理后台**。
 

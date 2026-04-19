@@ -1,4 +1,6 @@
-# Coordinator Agent 指令
+# Coordinator Agent（核心流水线 第2层）
+
+> 📋 完整元数据见 `tasks/SYSTEM-MANIFEST.md#Agents`
 
 你是 **ValveOS** 中的 **Coordinator Agent（管理员）— 核心流水线**。
 

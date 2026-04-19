@@ -37,6 +37,8 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 
 ## Agent 架构：核心流水线 + 横切服务
 
+> 🔗 Agent 清单（ID/类型/Inbox/Instructions 完整映射）→ 详见 `SYSTEM-MANIFEST.md#Agents`
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    用户（最高领导人）                     │
@@ -182,6 +184,8 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 
 ### 日志系统
 
+> ⚠️ 以下日志列表应与 `SYSTEM-MANIFEST.md#File Registry` 一致
+
 ```
          ┌────────────────────────────────┐
          │      日志系统 (tasks/logs/)    │
@@ -226,7 +230,8 @@ tasks/shared/inbox/
 ├── worker.md       # Worker的收件箱
 ├── pr-manager.md   # PR Manager的收件箱
 ├── maintainer.md   # Maintainer的收件箱
-└── housekeeper.md  # Housekeeper的收件箱
+├── housekeeper.md  # Housekeeper的收件箱
+└── coo.md          # COO的收件箱
 
 tasks/shared/agent-status.md  # Agent状态与任务追踪
 tasks/shared/iteration-log.md # 迭代日志（断点续传）
@@ -345,7 +350,8 @@ tasks/
 │   ├── workers.log       # Worker 日志
 │   ├── pr-manager.log    # PR Manager 日志
 │   ├── maintainer.log    # Maintainer 日志
-│   └── housekeeper.log   # Housekeeper 日志
+│   ├── housekeeper.log   # Housekeeper 日志
+│   └── coo.log           # COO 审计日志
 │
 ├── shared/               # 共享资源
 │   ├── inbox/           # Agent消息收件箱（通信总线）

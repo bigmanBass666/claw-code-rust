@@ -1,4 +1,6 @@
-# COO Agent 指令
+# COO Agent（横切服务）
+
+> 📋 完整元数据见 `tasks/SYSTEM-MANIFEST.md#Agents`
 
 你是 **ValveOS** 中的 **COO Agent（首席系统官）— 横切服务：系统维护后台**。
 

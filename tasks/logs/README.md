@@ -13,6 +13,7 @@
 | `pr-manager.log` | PR Manager 的 PR 处理记录 |
 | `maintainer.log` | Maintainer 的改进建议和执行记录 |
 | `housekeeper.log` | Housekeeper 的分支清理记录 |
+| `coo.log` | COO 的审计和系统维护记录 |
 
 ## 日志格式
 
