@@ -207,7 +207,7 @@ Agent会执行以下操作：
    - `tasks/workers/status.md` + `branches.md`（清空分支记录）
    - `tasks/pr-manager/pr-queue.md`
    - `tasks/maintainer/improvements.md`（改进状态改为 proposed 或删除已完成项）
-   - `tasks/coo/audit-log.md`（只保留表头，清空审计记录行）
+   - `tasks/coo/audit-log.md`（**归档保留**：在文件内添加重置分隔线，不清空历史记录）
    - `tasks/housekeeper/cleanup-queue.md`（保留清理历史）
 6. 输出："✅ 系统已重置，可以重新唤醒 Planner 开始新迭代"
 
@@ -226,6 +226,7 @@ Agent会执行以下操作：
 2. **保留cleanup-queue的清理历史**
 3. **保留logs/目录的日志文件**
 4. **重置前必须告知用户将要做什么**
+5. **保留audit-log的制度记忆** — 审计日志是跨迭代的制度记忆，重置时只添加分隔线标注，不清空
 
 ---
 
