@@ -8,7 +8,7 @@
 | Agent | 最近活跃 | 当前状态 | 等待唤醒 |
 |-------|----------|----------|----------|
 | Planner | 2026-04-20 | 沉睡 | 用户手动 |
-| Coordinator | - | 未启动 | Planner |
+| Coordinator | - | 未启动 | 用户 |
 | Worker-001 | - | 未启动 | Coordinator |
 | Worker-002 | - | 未启动 | Coordinator |
 | Worker-003 | - | 未启动 | Coordinator |
@@ -26,7 +26,7 @@
 
 | 任务ID | 描述 | 状态 | 负责人 | 优先级 | 创建时间 |
 |--------|------|------|--------|--------|----------|
-| TASK-013 | 同步本地 main 到 upstream/main | pending | Coordinator→Worker | P0 | 2026-04-20 |
+| TASK-013 | 同步本地 main 到 upstream/main | completed | Planner | P0 | 2026-04-20 |
 | TASK-014 | 关闭 PR #42 和 Issue #36 | pending | 需用户审批 | P1 | 2026-04-20 |
 | TASK-015 | 清理 origin/feat/fix-windows-unc-path 旧分支 | pending | Worker | P2 | 2026-04-20 |
 
@@ -47,6 +47,7 @@
 
 | 时间 | 被唤醒者 | 唤醒原因 | 结果 |
 |------|----------|----------|------|
+| 2026-04-20 13:00 | Planner | 用户唤醒 | 断点续传：TASK-013确认已完成，TASK-014/015下发到Coordinator队列 |
 | 2026-04-20 | Planner | 用户唤醒 | Iteration 7 计划制定完成，1任务下发到Coordinator队列 |
 | 2026-04-20 | 系统 | 系统重置 | 全部Agent回到未启动 |
 
