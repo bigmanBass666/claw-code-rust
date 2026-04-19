@@ -170,6 +170,9 @@ Maintainer — 分析日志、持续改进系统本身
     │ 分支清理任务（写Housekeeper的inbox）
     ▼
 Housekeeper — 清理已合并/过期的分支
+    │
+    ▼
+COO（首席系统官）— 系统文档维护、审计、skill优化
 ```
 
 ### 各角色职责
@@ -182,6 +185,7 @@ Housekeeper — 清理已合并/过期的分支
 | **PR Manager** | 提取干净改动、质量检查 | 自动化 PR 质量验证 |
 | **Maintainer** | 分析运行日志、提出改进 | 持续优化系统本身 |
 | **Housekeeper** | 清理已合并/过期的分支 | 保持仓库整洁 |
+| **COO** | 系统文档维护、审计、skill优化 | 每次改动后审计+评估skill |
 
 ### 协调文件索引
 
@@ -198,6 +202,7 @@ Housekeeper — 清理已合并/过期的分支
 | `tasks/shared/inbox/` | **消息收件箱** | 6个Agent各一个 |
 | `tasks/shared/agent-status.md` | **状态与任务追踪** | 所有Agent状态+任务看板 |
 | `tasks/shared/iteration-log.md` | **迭代日志** | 断点续传 |
+| `.trae/skills/valveos-audit/` | **审计 Skill** | 文档一致性检测 |
 
 详细架构、完整流程、分支策略等 → 见 `tasks/ARCHITECTURE.md`
 
@@ -215,6 +220,9 @@ Housekeeper — 清理已合并/过期的分支
 2. **遇到冲突不要自己 merge**：写入 inbox 请求 Worker 处理
 3. **非执行Agent不做复杂 git 操作**：只有 Worker 和 Housekeeper 可以做 merge/rebase
 4. **push 被拒绝时**：先 `git pull --rebase origin main`，仍然失败则交给 Worker
+5. **Worker 必须使用 worktree 创建分支**：`git worktree add ../claw-code-rust-w<id> -b agent/worker-<id>/<task> upstream/main`，不在主仓库切换分支
+6. **主仓库永远保持在 main 分支** — Worker 不在主仓库做 checkout
+7. **upstream/main ref 不可用时**：先尝试 `git fetch upstream main:refs/remotes/upstream/main`，仍失败则用 `origin/main` 替代（记录在 assignments.md）
 
 ### ⚠️ PR 质量铁律
 
@@ -284,6 +292,7 @@ chore: apply clippy fixes across workspace             ❌ 太泛
 | 📂 Git工作流 | 创建分支/提PR时 | `git-workflow.md` |
 | 🚨 Git损坏 | git命令报错时 | `cli-operations.md#.git损坏应急协议` |
 | 💤 待机模式 | Agent待机轮询inbox时 | `cli-operations.md#待机模式` |
+| 🔧 COO审计 | 每次文档改动后 | `valveos-audit skill` |
 
 ## 详细规范
 

@@ -221,6 +221,14 @@ Agent会执行以下操作：
 
 ## .git 损坏应急协议
 
+### 预防措施：使用 Worktree 隔离
+
+多个 Worker 同时操作同一个 git 仓库会导致 .git 损坏。预防方法：
+
+- Worker 使用 `git worktree add` 创建独立工作目录
+- 主仓库永远保持在 main 分支
+- 详见 `git-workflow.md#Worker Worktree 工作流`
+
 当 `git` 命令报错（如 `fatal: not a git repository`、`corrupt`、`index.lock` 等）时：
 
 ### 修复步骤

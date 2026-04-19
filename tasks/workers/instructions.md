@@ -57,31 +57,63 @@
 | 需要提 PR | **`upstream/main`** | 确保 diff 干净 |
 | 不需要提 PR | `main` | 可以包含 AI 文件 |
 
-### 创建分支的步骤
+### ⚠️ 必须使用 Worktree
+
+**Worker 不在主仓库切换分支！** 多个 Worker 同时 checkout 会导致 .git 损坏。
+
+每个 Worker 必须使用 `git worktree` 创建独立工作目录：
+
+### 创建 Worktree 的步骤
 
 #### 如果任务需要提 PR：
 ```bash
 # 1. 获取上游最新代码
 git fetch upstream
 
-# 2. 基于上游创建工作分支
-git checkout -b agent/worker-<id>/<task> upstream/main
+# 2. 验证 upstream/main ref 可用
+git rev-parse upstream/main
+# 如果失败：git fetch upstream main:refs/remotes/upstream/main
+# 如果仍然失败：使用 origin/main 替代，记录在 assignments.md
 
-# 3. 确认分支基于正确的位置
+# 3. 创建 worktree + 分支
+git worktree add ../claw-code-rust-w<id> -b agent/worker-<id>/<task> upstream/main
+
+# 4. 切换到 worktree 目录
+cd ../claw-code-rust-w<id>
+
+# 5. 确认分支正确
+git branch --show-current
 git log --oneline -1
-# 应该显示 upstream/main 的最新 commit
 ```
 
 #### 如果任务不需要提 PR：
 ```bash
-# 基于 main 创建分支
-git checkout -b agent/worker-<id>/<task> main
+# 创建 worktree 基于 main
+git worktree add ../claw-code-rust-w<id> -b agent/worker-<id>/<task> main
+cd ../claw-code-rust-w<id>
 ```
 
-### 为什么必须从 upstream/main 创建？
+### 完成后清理 Worktree
 
-因为 PR Manager 会从你的分支提取改动到 feat/xxx 分支。
-如果你的分支基于 main（包含 tasks/、notifications/ 等），那么 diff 会包含这些无关文件！
+```bash
+# 1. 回到主仓库
+cd ../claw-code-rust
+
+# 2. 清理 worktree
+git worktree remove ../claw-code-rust-w<id>
+
+# 3. 清理已合并的分支（如果 PR 已合并）
+git branch -d agent/worker-<id>/<task>
+```
+
+### 为什么必须使用 Worktree？
+
+Git 不支持多进程并发操作同一仓库。多个 Worker 同时 `git checkout` 会导致：
+- .git/HEAD 被覆盖或删除
+- refs/ 目录损坏
+- 工作目录文件冲突
+
+Worktree 让每个 Worker 有独立的工作目录和 HEAD，互不影响。
 
 ---
 

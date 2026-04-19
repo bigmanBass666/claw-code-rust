@@ -184,3 +184,58 @@ PR Manager 是专门负责将 AI 工作转化为干净 PR 的 Agent：
 - 向用户汇报，等待审批
 
 详见 `tasks/pr-manager/instructions.md`
+
+---
+
+## Worker Worktree 工作流
+
+### 为什么需要 Worktree
+
+多个 Worker 同时在主仓库 `git checkout` 会导致 .git 损坏。Worktree 让每个 Worker 有独立的工作目录和 HEAD。
+
+### 创建 Worktree
+
+```bash
+# 在主仓库中创建（主仓库保持在 main 分支）
+git worktree add ../claw-code-rust-w001 -b agent/worker-001/fix-xxx upstream/main
+
+# Worker 切换到 worktree
+cd ../claw-code-rust-w001
+```
+
+### 在 Worktree 中工作
+
+```bash
+# 所有 git 操作在 worktree 目录中进行
+git add .
+git commit -m "fix: description"
+git push origin agent/worker-001/fix-xxx
+```
+
+### 清理 Worktree
+
+```bash
+# 回到主仓库
+cd ../claw-code-rust
+
+# 移除 worktree
+git worktree remove ../claw-code-rust-w001
+
+# 清理分支（如果已合并）
+git branch -d agent/worker-001/fix-xxx
+```
+
+### Worktree 命名规范
+
+| Worker | Worktree 目录 | 分支名 |
+|--------|--------------|--------|
+| Worker-001 | `../claw-code-rust-w001` | `agent/worker-001/<task>` |
+| Worker-002 | `../claw-code-rust-w002` | `agent/worker-002/<task>` |
+| Worker-003 | `../claw-code-rust-w003` | `agent/worker-003/<task>` |
+
+### 注意事项
+
+- 主仓库永远保持在 main 分支
+- Worker 只在自己的 worktree 中工作
+- Worktree 共享 .git 对象数据库，不需要重新 fetch
+- 协调文件（tasks/）在主仓库中，Worker 通过绝对路径访问
