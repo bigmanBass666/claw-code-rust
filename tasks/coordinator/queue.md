@@ -22,7 +22,30 @@
 
 ## 待处理任务
 
-<!-- 新任务追加到这里 -->
+### TASK-ITER10-002: 同步 upstream/main → origin/main
+- **描述**: upstream/main (82e2d40) 领先 origin/main (cbae86b) 8个提交，包括 PR #40 null数组修复、PR #42 home_dir.rs 修复等。需要同步。
+- **状态**: pending
+- **优先级**: P0
+- **负责人**: Coordinator → Worker
+- **操作步骤**:
+  1. Coordinator 分配任务给 Worker
+  2. Worker 执行 `git pull --rebase upstream main` 到 local main
+  3. 验证 cargo test 通过
+  4. push 到 origin/main
+  5. 验证 origin/main = upstream/main
+
+### TASK-ITER10-003: 清理未追踪的 test/ 目录
+- **描述**: 仓库根目录存在 `test/` 未追踪目录，内容仅一个"重置状态.md"文件，疑似调试遗留，应删除。
+- **状态**: pending
+- **优先级**: P1
+- **负责人**: Worker
+
+### TASK-ITER10-004: 评估 query.rs TODO 并形成改进建议
+- **描述**: query.rs 中有 8 个 TODO，分布在上下文压缩、shell 问题、memory_content 等处。评估可行性和优先级，形成改进建议。
+- **状态**: pending
+- **优先级**: P2
+- **负责人**: Worker
+- **产出**: 在 tasks/planner/backlog.md 中添加改进条目
 
 ---
 
