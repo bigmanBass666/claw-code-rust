@@ -37,6 +37,10 @@
 
 | 任务ID | 描述 | 状态 | 负责人 | 优先级 | 创建时间 |
 |--------|------|------|--------|--------|----------|
+| TASK-ITER10-001 | 验证 upstream/main 同步状态 | completed | Planner（直接执行） | P0 | 2026-04-20T12:30:00Z |
+| TASK-ITER10-002 | 同步 upstream/main → origin/main（8个新提交） | pending | Coordinator→Worker | P0 | 2026-04-20T12:35:00Z |
+| TASK-ITER10-003 | 清理未追踪的 test/ 目录 | pending | Worker | P1 | 2026-04-20T12:35:00Z |
+| TASK-ITER10-004 | 评估 query.rs TODO 并形成改进建议 | pending | Worker | P2 | 2026-04-20T12:35:00Z |
 
 ### 已废弃迭代
 
