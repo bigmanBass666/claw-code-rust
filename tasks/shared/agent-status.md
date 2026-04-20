@@ -17,7 +17,7 @@
 | PR Manager | - | 未启动 | Worker |
 | Maintainer | 2026-04-21T04:59:10Z | 沉睡 | — |
 | Housekeeper | - | 未启动 | PR合并后/24h安全网 |
-| COO | - | 待处理 Maintainer 改进建议 | — |
+| COO | 2026-04-21T05:15:06Z | 沉睡 | — |
 
 ### 审批类任务格式
 
@@ -44,6 +44,8 @@
 | TASK-ITER11-002 | 归档 Iteration 10 冻结任务 | pending | Planner | P1 |
 | TASK-ITER11-003 | 分析 upstream FETCH_HEAD 新提交 | in_progress | Worker-002 | P2 |
 | TASK-ITER11-004 | 调查测试失败: slash_model_with_argument_in_inline_mode_updates_status_without_transcript_note | completed | Worker-001 | P0 |
+| TASK-ITER11-005 | 实施 IMP-2026-0421-001: 日志基础设施 | pending | 待协调 | P1 |
+| TASK-ITER11-006 | 实施 IMP-2026-0421-002: Worker心跳机制 | pending | 待协调 | P1 |
 
 ### 历史迭代（已结束）
 
@@ -74,6 +76,7 @@
 | 2026-04-21 04:04 | Coordinator | 演练模式 | 任务已分配给 Worker |
 | 2026-04-21 04:50 | Coordinator | 演练模式 | TASK-ITER11-004 已分配给 Worker-001 |
 | 2026-04-21 05:09 | Coordinator | 演练模式 | 处理 TASK-ITER11-004 完成消息，队列已清空，进入待机 |
+| 2026-04-21 05:15 | COO | 演练模式 | 评估 Maintainer 报告，采纳2个改进建议，审计通过 |
 
 ## 使用说明
 
