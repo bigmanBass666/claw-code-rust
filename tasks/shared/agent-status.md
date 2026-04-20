@@ -40,7 +40,7 @@
 
 | 任务ID | 描述 | 状态 | 负责人 | 优先级 |
 |--------|------|------|--------|--------|
-| TASK-ITER11-001 | 提交工作区清理 | in_progress | Worker-001 | P1 |
+| TASK-ITER11-001 | 提交工作区清理 | completed | Worker-001 | P1 |
 | TASK-ITER11-002 | 归档 Iteration 10 冻结任务 | pending | Planner | P1 |
 | TASK-ITER11-003 | 分析 upstream FETCH_HEAD 新提交 | in_progress | Worker-002 | P2 |
 
