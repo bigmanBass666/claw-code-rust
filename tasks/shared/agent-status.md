@@ -2,13 +2,15 @@
 
 > 用户是阀门，只有被唤醒的Agent才能执行
 > Agent之间通过 inbox 文件传递消息
+>
+> **ValveOS v0.2.0** — 最后更新: 2026-04-20
 
 ## Agent 状态
 
 | Agent | 最近活跃 | 当前状态 | 等待唤醒 |
 |-------|----------|----------|----------|
-| Planner | 2026-04-20T12:35:00Z | 沉睡 | Coordinator |
-| Coordinator | 2026-04-20T12:35:00Z | 沉睡 | 用户 |
+| Planner | 2026-04-20T16:00:00Z | 沉睡 | Coordinator |
+| Coordinator | 2026-04-20T16:00:00Z | 沉睡 | 用户 |
 | Worker-001 | - | 未启动 | Coordinator |
 | Worker-002 | - | 未启动 | Coordinator |
 | Worker-003 | - | 未启动 | Coordinator |
@@ -24,7 +26,6 @@
 | 格式 | 示例 |
 |------|------|
 | `需用户审批（原因：XXX；操作：YYY）` | `需用户审批（原因：评论属社交边界；操作：在PR#42评论请求关闭）` |
-| `需用户审批（原因：XXX；操作：YYY）` | `需用户审批（原因：关闭Issue需社区确认；操作：在Issue#36/35评论确认已解决）` |
 
 ⚠️ 禁止只写 `需用户审批` —— 必须包含原因和操作指引。
 
@@ -33,48 +34,36 @@
 > 追踪所有任务的完整生命周期
 > 任务状态: pending / in_progress / completed / blocked / failed / stale
 
-### 当前迭代: Iteration 10
+### 🏗️ ValveOS v0.2.0 基础建设里程碑
 
-| 任务ID | 描述 | 状态 | 负责人 | 优先级 | 创建时间 |
-|--------|------|------|--------|--------|----------|
-| TASK-ITER10-001 | 验证 upstream/main 同步状态 | completed | Planner（直接执行） | P0 | 2026-04-20T12:30:00Z |
-| TASK-ITER10-002 | 同步 upstream/main → origin/main（8个新提交） | pending | Coordinator→Worker | P0 | 2026-04-20T12:35:00Z |
-| TASK-ITER10-003 | 清理未追踪的 test/ 目录 | pending | Worker | P1 | 2026-04-20T12:35:00Z |
-| TASK-ITER10-004 | 评估 query.rs TODO 并形成改进建议 | pending | Worker | P2 | 2026-04-20T12:35:00Z |
+> 2026-04-20 完成 — 非迭代式系统升级
 
-### 已废弃迭代
+| 任务ID | 描述 | 状态 |
+|--------|------|------|
+| VF-001 | 统一 upstream 仓库名称 (7df-lab) | **completed** |
+| VF-002 | 创建项目理解文档 project-understanding.md | **completed** |
+| VF-003 | AGENTS.md 增强（安全铁律+能力声明+版本号） | **completed** |
+| VF-004 | ARCHITECTURE.md 瘦身（提取标准开场白） | **completed** |
+| VF-005 | 4 个 instructions.md 补全边界条件 | **completed** |
+| VF-006 | 斜杠命令协议 (/status, /reset, /audit, /help, /log) | **completed** |
+| VF-007 | 系统命令日志 system-commands.log | **completed** |
 
-#### Iteration 9 (已废弃 — 2026-04-20 系统重置)
+### 历史迭代（已结束）
 
-| 任务ID | 描述 | 状态 | 负责人 | 优先级 |
-|--------|------|------|--------|--------|
-| TASK-016 | 同步 local main 到 upstream/main | pending | Coordinator→Worker | P0 |
-| TASK-017 | 关闭 PR #42、Issue #36、Issue #35 | pending | 需用户审批 | P1 |
-| TASK-018 | 清理 origin/feat/fix-windows-unc-path 旧分支 | pending | Worker | P2 |
-| TASK-019 | 评估上游 Issue 贡献可行性 | pending | Worker | P2 |
+#### Iteration 10: 2026-04-20 ~ 冻结
 
-#### Iteration 8 (已废弃 — 2026-04-20 系统重置)
+> 被 ValveOS 基础建设替代，任务已由基础建设里程碑覆盖
 
 | 任务ID | 描述 | 状态 | 负责人 | 优先级 |
 |--------|------|------|--------|--------|
-| - | - | - | - | - |
+| TASK-ITER10-001 | 验证 upstream/main 同步状态 | completed | Planner | P0 |
+| TASK-ITER10-002 | 同步 upstream/main → origin/main | pending | Coordinator→Worker | P0 |
+| TASK-ITER10-003 | 清理未追踪的 test/ 目录 | completed | （.gitignore 处理） | P1 |
+| TASK-ITER10-004 | 评估 query.rs TODO 并形成改进建议 | pending | Worker | P2 |
 
-#### Iteration 7 (已废弃 — 2026-04-20 系统重置)
+#### Iteration 1-9: 已废弃
 
-| 任务ID | 描述 | 状态 | 负责人 | 优先级 |
-|--------|------|------|--------|--------|
-| TASK-013 | 同步本地 main 到 upstream/main | completed | Planner | P0 |
-| TASK-014 | 关闭 PR #42 和 Issue #36 | pending | 需用户审批 | P1 |
-| TASK-015 | 清理 origin/feat/fix-windows-unc-path 旧分支 | pending | Worker | P2 |
-
-#### Iteration 6 (已废弃 — 2026-04-20 系统重置)
-
-| 任务ID | 描述 | 状态 | 负责人 | 优先级 |
-|--------|------|------|--------|--------|
-| TASK-009 | 配置 upstream 远程仓库 | completed | Coordinator | P0 |
-| TASK-010 | 修复 CJK 文本 panic（Issue #36） | blocked | Worker-001 | P0 |
-| TASK-011 | 重新提取 Windows Unc path 修复为干净分支 | blocked | Worker-002 | P1 |
-| TASK-012 | 清理远程分支 | completed | Worker-003 | P2 |
+> 详见 iteration-log.md 历史记录
 
 ---
 
@@ -82,7 +71,9 @@
 
 | 时间 | 被唤醒者 | 唤醒原因 | 结果 |
 |------|----------|----------|------|
-| 2026-04-20 | 系统 | 系统重置 | 全部Agent回到未启动，Iteration 10 就绪 |
+| 2026-04-20 12:30 | 系统 | 系统重置 | Iteration 10 启动 |
+| 2026-04-20 15:23 | 系统 | ValveOS 基础建设 spec | v0.2.0 就绪 |
+| 2026-04-20 21:00 | 系统 | 运行时基础设施加固 | 进行中 |
 
 ## 使用说明
 
