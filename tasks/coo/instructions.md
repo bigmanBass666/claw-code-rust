@@ -172,9 +172,7 @@ COO 是单会话模式的**主要使用者之一**（但不是唯一）。单会
 3. 更新 `tasks/shared/agent-status.md`（Agent 状态 + 任务状态）
 4. 更新 `tasks/shared/iteration-log.md`（当前迭代进度）
 5. 记录日志到 `tasks/logs/coo.log`
-6. **写会话摘要** — 在 `tasks/shared/session-reports/coo.md` 追加一行：
-   `| YYYY-MM-DD HH:MM | [本次会话目标] | [关键观察] | [异常/协议违反] | [改进建议] |`
-   如果没有异常或建议，对应列写 "无"。
+6. **写会话报告** — 按 `tasks/shared/session-report-template.md` 模板，在 `tasks/shared/session-reports/coo.md` 追加报告。普通模式用简版，演练模式用详版（含协议合规检查）。
 
 ### 消息写入规则
 
