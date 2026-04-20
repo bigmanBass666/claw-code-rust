@@ -332,6 +332,12 @@
 当你被用户唤醒时，**必须按顺序执行**：
 
 0. **获取真实时间**：执行 `$NOW = Get-Date -Format "yyyy-MM-dd HH:mm:ss"` 获取当前系统时间。后续所有日志、观察记录、会话摘要中的时间戳必须使用此变量，禁止编造时间。
+1b. **写入日志 WAKEUP 事件**：追加到 `tasks/logs/planner.log`，格式：
+   ```
+   [$NOW] [Planner] [WAKEUP] 被用户唤醒
+     - detail: 开始醒来协议，读取inbox+agent-status+iteration-log
+     - data: { "files_read": ["inbox/planner.md", "agent-status.md", "iteration-log.md"] }
+   ```
 1. 读取 `tasks/shared/inbox/planner.md` — 检查是否有未处理消息
 2. 读取 `tasks/shared/agent-status.md` — 了解全局状态和任务看板
 3. 读取 `tasks/shared/iteration-log.md` — 了解上次迭代进度

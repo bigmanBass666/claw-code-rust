@@ -23,8 +23,14 @@
 
 ## 心跳机制
 
-每个工作 Agent 应在完成任务或重要里程碑后更新此文件。
-时间戳格式: `YYYY-MM-DD HH:MM:SS`
+每个 Worker **必须**在唤醒/认领/里程碑/完成时更新此表的"最新心跳"列。
+
+### 超时规则
+
+- **30 分钟无心跳**且状态为 `working` → Coordinator 标记为"疑似卡住"，建议重分配
+- **60 分钟无进度** → Coordinator 写入 Planner inbox 请求决策
+
+时间戳格式: `YYYY-MM-DD HH:MM:SS`（使用 $NOW 变量，禁止编造）
 
 ---
 

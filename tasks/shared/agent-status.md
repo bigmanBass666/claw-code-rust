@@ -49,16 +49,16 @@
 
 ### 历史迭代（已结束）
 
-#### Iteration 10: 2026-04-20 ~ 冻结
+#### Iteration 10: 2026-04-20 ~ 已归档
 
-> 被 Iteration 11 替代，任务已归档
+> 冻结任务已归档至 iteration-log.md
 
 | 任务ID | 描述 | 状态 | 负责人 | 优先级 |
 |--------|------|------|--------|--------|
 | TASK-ITER10-001 | 验证 upstream/main 同步状态 | completed | Planner | P0 |
-| TASK-ITER10-002 | 同步 upstream/main → origin/main | frozen | Coordinator→Worker | P0 |
-| TASK-ITER10-003 | 清理未追踪的 test/ 目录 | frozen | （.gitignore 处理） | P1 |
-| TASK-ITER10-004 | 评估 query.rs TODO 并形成改进建议 | frozen | Worker | P2 |
+| TASK-ITER10-002 | 同步 upstream/main → origin/main | archived | Coordinator→Worker | P0 |
+| TASK-ITER10-003 | 清理未追踪的 test/ 目录 | archived | （.gitignore 处理） | P1 |
+| TASK-ITER10-004 | 评估 query.rs TODO 并形成改进建议 | archived | Worker | P2 |
 
 #### Iteration 1-9: 已废弃
 

@@ -247,7 +247,7 @@ PR 合并后，将待清理的 feat/ 分支写入 `tasks/housekeeper/cleanup-que
 
 ---
 
-## 日志记录
+## 日志记录规范
 
 你必须在以下操作时记录日志到 `tasks/logs/pr-manager.log`：
 
@@ -318,7 +318,12 @@ PR 合并后，将待清理的 feat/ 分支写入 `tasks/housekeeper/cleanup-que
 当你被用户唤醒时，**必须首先执行**：
 
 0. **获取真实时间**：执行 `$NOW = Get-Date -Format "yyyy-MM-dd HH:mm:ss"` 获取当前系统时间。后续所有带时间戳的记录（日志、inbox消息、状态更新等）必须使用此变量，禁止编造时间。
-
+1b. **写入日志 WAKEUP 事件**：追加到 `tasks/logs/pr-manager.log`，格式：
+   ```
+   [$NOW] [PRManager] [WAKEUP] 被用户唤醒
+     - detail: 开始醒来协议，读取inbox+agent-status
+     - data: { "files_read": ["inbox/pr-manager.md", "agent-status.md"] }
+   ```
 1. 读取 `tasks/shared/inbox/pr-manager.md` — 检查是否有未处理消息
 2. 如有未处理消息 → 标记为"已处理"并处理
 3. 根据消息内容，自主判断还需读取哪些文件（如：`tasks/pr-manager/pr-queue.md`）

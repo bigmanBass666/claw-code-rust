@@ -252,10 +252,19 @@ cp claw-code-rust-backup/*.rs claw-code-rust/crates/...
 当你被用户唤醒时，**必须首先执行**：
 
 0. **获取真实时间**：执行 `$NOW = Get-Date -Format "yyyy-MM-dd HH:mm:ss"` 获取当前系统时间。后续所有带时间戳的记录（日志、inbox消息、状态更新等）必须使用此变量，禁止编造时间。
-
+1b. **写入日志 WAKEUP 事件**：追加到 `tasks/logs/maintainer.log`，格式：
+   ```
+   [$NOW] [Maintainer] [WAKEUP] 被用户唤醒
+     - detail: 开始醒来协议，读取inbox
+     - data: { "files_read": ["inbox/maintainer.md"] }
+   ```
 1. 读取 `tasks/shared/inbox/maintainer.md` — 检查是否有未处理消息
 2. 如有未处理消息 → 标记为"已处理"并处理
 3. 根据消息内容，自主判断还需读取哪些文件（如：日志文件、改进队列）
+
+1b. **检查任务超时**：读取 `tasks/shared/agent-status.md` 全局任务看板，检查 `in_progress` 状态的任务：
+   - 任务创建超过 24 小时仍为 in_progress → 写入 Planner inbox 告警
+   - 格式：`[时间] [Maintainer] [WARN] TASK-XXX 超时（XX小时无进度）`
 
 ### 完成后的输出
 

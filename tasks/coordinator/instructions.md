@@ -254,6 +254,11 @@ Worker 完成任务后：
 2. 如有未处理消息 → 标记为"已处理"并处理
 3. 根据消息内容，自主判断还需读取哪些文件（如：`tasks/coordinator/queue.md`、`tasks/planner/plans/`）
 
+1b. **检查 Worker 心跳**：读取 `tasks/workers/status.md`，检查所有 Worker 的心跳时间戳：
+   - 心跳超过 30 分钟未更新且状态为 `working` → 标记为"疑似卡住"，在任务分配时优先重分配
+   - 任务超过 60 分钟无进度 → 写入 Planner inbox 请求决策
+   - 格式：`[时间] [Coordinator] [WARN] Worker-XXX 心跳超时（XX分钟无更新）`
+
 ### 完成后的输出
 
 极简输出，不啰嗦，不期待用户回复：

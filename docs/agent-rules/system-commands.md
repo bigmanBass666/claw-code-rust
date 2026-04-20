@@ -22,6 +22,7 @@
 | `/help` | `/h`, `/?` | 信息 | 帮助, help, 命令, 列表 | 列出所有可用命令 |
 | `/log` | `/l`, `/日志` | 信息 | 日志, log, 历史, 流水账 | 查看命令历史 |
 | `/rehearsal-review` | `/rr`, `/演练复盘` | 审计 | 演练, 复盘, review, 测试结果 | 汇总演练报告 |
+| `/workflow` | `/wf`, `/工作流` | 操作 | 工作流, 流程, workflow | 执行预定义工作流 |
 
 ### 协议流程
 
@@ -75,7 +76,12 @@
 - **未追踪文件**: [如有]
 
 ### 下一步建议
-[如果迭代进行中 → "请唤醒 [等待中的Agent]"；如果待开始 → "请唤醒 Planner 制定新计划"]
+[动态推荐，按优先级从高到低匹配，只输出第一条命中的建议]
+1. 有 `in_progress` 任务且对应 Worker 心跳超时（30分钟无更新）→ "⚠️ Worker-XXX 心跳超时，建议唤醒 Coordinator 检查"
+2. 有 pending 任务且无人认领 → "📋 有 N 个待分配任务，建议唤醒 Coordinator"
+3. 有 Agent 状态为"待机"且其 inbox 有未读消息 → "📨 [Agent名] 有未读消息，建议唤醒"
+4. 所有任务 completed → "✅ 当前迭代任务已全部完成，建议唤醒 Planner 制定新计划"
+5. 无迭代 → "请唤醒 Planner 启动新迭代"
 ```
 
 #### ⚠️ 准确性铁律
@@ -225,4 +231,51 @@
 
 ### 下一步
 [如需修复 → "请唤醒 [Agent名] 执行修复"；如全部通过 → "✅ 演练通过，系统可进入正式运行"]
+```
+
+---
+
+### 7. /workflow — 预定义工作流
+
+#### 执行步骤
+
+1. 解析参数：提取工作流名称
+2. 无参数 → 列出可用工作流
+3. 有参数 → 匹配工作流名，输出唤醒序列
+
+#### 可用工作流
+
+| 工作流名 | 唤醒序列 | 说明 |
+|----------|----------|------|
+| `full-pipeline` | Planner → Coordinator → Worker → PR Manager | 完整流水线（从规划到PR） |
+| `sync-upstream` | Planner → Worker | 同步上游（分析+执行） |
+| `cleanup` | Housekeeper → Maintainer | 仓库清理+分析 |
+| `audit` | COO | 系统审计 |
+
+#### 输出格式（无参数）
+
+```markdown
+## 可用工作流
+
+| 工作流 | 唤醒序列 | 说明 |
+|--------|----------|------|
+| full-pipeline | Planner → Coordinator → Worker → PR Manager | 完整流水线 |
+| sync-upstream | Planner → Worker | 同步上游 |
+| cleanup | Housekeeper → Maintainer | 仓库清理 |
+| audit | COO | 系统审计 |
+
+使用方式：`/workflow full-pipeline`
+```
+
+#### 输出格式（有参数）
+
+```markdown
+## 工作流: [工作流名]
+
+**唤醒序列**：
+1. 唤醒 [Agent1] — [原因]
+2. 唤醒 [Agent2] — [原因]
+...
+
+请按顺序执行，每步完成后唤醒下一个 Agent。
 ```

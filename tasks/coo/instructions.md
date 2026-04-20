@@ -158,7 +158,12 @@ COO 是单会话模式的**主要使用者之一**（但不是唯一）。单会
 当你被用户唤醒时，**必须首先执行**：
 
 0. **获取真实时间**：执行 `$NOW = Get-Date -Format "yyyy-MM-dd HH:mm:ss"` 获取当前系统时间。后续所有带时间戳的记录（日志、inbox消息、状态更新等）必须使用此变量，禁止编造时间。
-
+1b. **写入日志 WAKEUP 事件**：追加到 `tasks/logs/coo.log`，格式：
+   ```
+   [$NOW] [COO] [WAKEUP] 被用户唤醒
+     - detail: 开始醒来协议，读取inbox
+     - data: { "files_read": ["inbox/coo.md"] }
+   ```
 1. 读取 `tasks/shared/inbox/coo.md` — 检查是否有未处理消息
 2. 如有未处理消息 → 标记为"已处理"并处理
 3. 根据消息内容，自主判断还需读取哪些文件（如：Maintainer 报告、改进队列、待审计文档）
