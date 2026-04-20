@@ -193,23 +193,44 @@ Start-Sleep -Seconds 300
 
 当用户想要从头开始时，告诉任意Agent **"执行系统重置"**。
 
+> ⚠️ **不可跳步**：以下步骤必须按顺序逐个执行，每完成一步标记 `[x]`。跳步会导致状态不一致（如 iteration-log 与 agent-status 迭代号不匹配）。
+
 ### 重置操作
 
 Agent会执行以下操作：
 
-1. **清空所有 inbox**（`tasks/shared/inbox/*.md`）→ 恢复为空模板
-2. **重置 agent-status.md** → 所有Agent回到"未启动"
-3. **归档当前 iteration-log 条目** → 标记为"已废弃"
-4. **新建空白迭代条目**
-5. **清空运行数据文件**（恢复模板）：
-   - `tasks/planner/observations.md`
-   - `tasks/coordinator/queue.md` + `assignments.md`
-   - `tasks/workers/status.md` + `branches.md`（清空分支记录）
-   - `tasks/pr-manager/pr-queue.md`
-   - `tasks/maintainer/improvements.md`（改进状态改为 proposed 或删除已完成项）
-   - `tasks/coo/audit-log.md`（**归档保留**：在文件内添加重置分隔线，不清空历史记录）
-   - `tasks/housekeeper/cleanup-queue.md`（保留清理历史）
-6. 输出："✅ 系统已重置，可以重新唤醒 Planner 开始新迭代"
+- [ ] **清空所有 inbox**（`tasks/shared/inbox/*.md`）→ 恢复为空模板
+- [ ] **重置 agent-status.md** → 所有Agent回到"未启动"
+- [ ] **归档当前 iteration-log 条目** → 标记为"已废弃"，新建递增迭代号条目（与 agent-status.md 迭代号一致）
+- [ ] **新建空白迭代条目**
+- [ ] **处理运行数据文件**：
+   - **归档保留**（添加重置分隔线，不清空）：
+     - `tasks/coo/audit-log.md`
+     - `tasks/shared/session-reports/*.md`（所有 7 个 Agent 文件）
+   - **清空恢复模板**：
+     - `tasks/planner/observations.md`
+     - `tasks/coordinator/queue.md` + `assignments.md`
+     - `tasks/workers/status.md` + `branches.md`（清空分支记录）
+     - `tasks/pr-manager/pr-queue.md`
+     - `tasks/maintainer/improvements.md`（改进状态改为 proposed 或删除已完成项）
+     - `tasks/housekeeper/cleanup-queue.md`（保留清理历史）
+- [ ] **不触碰制度文件**：instructions.md（所有 Agent）、ARCHITECTURE.md、AGENTS.md、SYSTEM-MANIFEST.md、decisions.md、SKILL.md 等跨迭代制度文件保持不变
+- [ ] 输出："✅ 系统已重置，可以重新唤醒 Planner 开始新迭代"
+
+### 完成后校验（必须执行）
+
+重置完成后，逐项校验以下内容，确保无遗漏：
+
+- [ ] iteration-log.md 当前迭代号 = agent-status.md 当前迭代号
+- [ ] 所有 inbox 已清空（7 个文件）
+- [ ] observations.md 已恢复模板
+- [ ] queue.md + assignments.md 已恢复模板
+- [ ] audit-log.md 有重置分隔线且历史保留
+- [ ] session-reports/*.md 有重置分隔线且历史保留
+- [ ] 制度文件（instructions.md/ARCHITECTURE.md/AGENTS.md/SYSTEM-MANIFEST.md/decisions.md）未被修改
+- [ ] git commit 成功
+
+如有任何项未通过，立即补执行对应步骤。
 
 ### 选择性重置
 
@@ -227,6 +248,7 @@ Agent会执行以下操作：
 3. **保留logs/目录的日志文件**
 4. **重置前必须告知用户将要做什么**
 5. **保留audit-log的制度记忆** — 审计日志是跨迭代的制度记忆，重置时只添加分隔线标注，不清空
+6. **不修改制度文件** — instructions.md、ARCHITECTURE.md、AGENTS.md、SYSTEM-MANIFEST.md、decisions.md 等是跨迭代的制度记忆，重置时不应修改
 
 ---
 

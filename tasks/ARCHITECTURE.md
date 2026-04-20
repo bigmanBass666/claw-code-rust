@@ -29,7 +29,7 @@
 
 ### 仓库关系
 ```
-upstream (claw-cli/claw-code-rust)     ← 上游（只读）
+upstream (7df-lab/claw-code-rust)     ← 上游（只读）
 origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 ```
 
@@ -402,7 +402,7 @@ tasks/
 ### Git 远程仓库结构
 
 ```
-upstream (claw-cli/claw-code-rust)     ← 上游，只读
+upstream (7df-lab/claw-code-rust)     ← 上游，只读
     └── main                           ← 上游主分支
 
 origin (bigmanBass666/claw-code-rust)  ← 你的 fork
