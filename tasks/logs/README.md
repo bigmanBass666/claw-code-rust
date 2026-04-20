@@ -53,10 +53,10 @@
   - detail: 开始醒来协议，读取inbox+agent-status+iteration-log
   - data: { "files_read": ["inbox/planner.md", "agent-status.md", "iteration-log.md"] }
 
-# 系统命令日志
-[2026-04-20 09:15:00] [INPUT] "看看状态" → 触发 查看状态 命令
-[2026-04-20 09:15:00] [RESPONSE] COO 处理，输出 7 个 Agent 状态
-[2026-04-20 14:30:00] [INPUT] "从头开始" → 触发 系统重置 命令
+# 系统命令日志（斜杠命令）
+[2026-04-20 09:15:00] [INPUT] "/status" → 触发 /status
+[2026-04-20 09:15:00] [RESPONSE] 处理完成，输出系统状态
+[2026-04-20 14:30:00] [INPUT] "/重置一下" → 触发 /reset（模糊匹配）
 [2026-04-20 14:30:01] [RESPONSE] 完全重置，清空 6 个 inbox
 
 # 断点续传

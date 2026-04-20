@@ -116,7 +116,8 @@
 
 | 功能 | 触发条件 | 详情位置 |
 |------|----------|----------|
-| 🔄 系统重置 | 用户说"执行系统重置" | `cli-operations.md#系统重置` |
+| ⚡ 系统命令 | 用户输入以 `/` 开头 | `system-commands.md`（斜杠命令协议） |
+| 🔄 系统重置 | `/reset` 或 "执行系统重置" | `cli-operations.md#系统重置` |
 | 🔔 通知消费 | 检查 GitHub 动态时 | `cli-operations.md#通知系统` |
 | 📝 Inbox 读写 | 向其他 Agent 发消息时 | `cli-operations.md#Agent协作操作` |
 | 🐛 调试方法 | 遇到 bug 时 | `cli-operations.md#调试方法论` |
