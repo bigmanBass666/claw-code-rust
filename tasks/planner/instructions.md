@@ -424,6 +424,8 @@
 | YYYY-MM-DDTHH:MM:SSZ | Planner | [消息摘要] | 未读 |
 ```
 
+⚠️ **即使无新决策也必须写报告**：Planner 被唤醒后发现无新决策时，仍须写入简版会话报告（执行动作写"无新决策"），然后进入待机。
+
 **Planner通常需要通知的Agent**：
 - Coordinator — 任务下发时
 - Maintainer — 发现系统问题时

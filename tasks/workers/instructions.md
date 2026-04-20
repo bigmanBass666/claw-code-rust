@@ -388,6 +388,8 @@ chore: run cargo clippy --fix                         ❌ 太懒
 | YYYY-MM-DDTHH:MM:SSZ | Worker-XXX | [消息摘要] | 未读 |
 ```
 
+⚠️ **即使无任务也必须写报告**：Worker 被唤醒后发现无待认领任务时，仍须写入简版会话报告（执行动作写"无待认领任务"），然后进入待机。
+
 **Worker通常需要通知的Agent**：
 - Coordinator — 任务完成/进度更新时
 - PR Manager — 任务完成且可进入PR流程时

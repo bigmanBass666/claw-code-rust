@@ -312,6 +312,8 @@ Worker 完成任务后：
 | YYYY-MM-DDTHH:MM:SSZ | Coordinator | [消息摘要] | 未读 |
 ```
 
+⚠️ **即使无未处理消息也必须写报告**：Coordinator 被唤醒后发现无未处理消息时，仍须写入简版会话报告（执行动作写"无未处理消息"），然后进入待机。
+
 **Coordinator通常需要通知的Agent**：
 - Worker — 任务分配时
 - PR Manager — Worker完成任务时
