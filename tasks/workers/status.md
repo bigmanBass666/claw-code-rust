@@ -9,7 +9,7 @@
 - `done` — 任务完成
 - `error` — 发生错误
 
-> **与 agent-status.md 的关系**：本文件记录 Worker **运行时**细粒度状态（idle/working/done/error），agent-status.md 记录 **全局** 生命周期状态（未启动/活跃/沉睡/待机）。Worker 完成任务后应同时更新两个文件。
+> **与 agent-status.md 的关系**：本文件记录 Worker **运行时**细粒度状态（idle/working/done/error），agent-status.md 记录 **全局** 生命周期状态（未启动/活跃/沉睡）。Worker 完成任务后应同时更新两个文件。
 
 ## Agent 状态
 

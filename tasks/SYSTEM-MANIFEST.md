@@ -41,7 +41,7 @@
 
 **关键特征**:
 - 单会话模式: 在 /spec 模式下可用 sub-agent 替代 Worker 执行代码编写任务
-- 待机模式: 支持 3 种（Coordinator inbox / Worker dispatch / PR Manager inbox）
+- 待机模式: 状态标记 + 断点续传（无轮询，AI 会话是一次性的）
 - 工作隔离: Worker 必须使用 git worktree 创建独立工作目录
 
 ---
@@ -56,7 +56,7 @@
 | 唤醒 | 用户打开特定 Agent 的会话 |
 | 睁眼 | 被唤醒的 Agent 主动读取自己的 inbox 消息 |
 | 声音 | Agent 写入共享文件的消息 |
-| 待机 | Agent 被唤醒但未收到消息，轮询等待中 |
+| 待机 | Agent 完成工作后标记状态，等待下次唤醒时断点续传 |
 
 ---
 
@@ -124,7 +124,7 @@
 | 🐛 调试方法 | 遇到 bug 时 | `cli-operations.md#调试方法论` |
 | 📂 Git 工作流 | 创建分支 / 提 PR 时 | `git-workflow.md` |
 | 🚨 Git 损坏 | git 命令报错时 | `cli-operations.md#.git损坏应急协议` |
-| 💤 待机模式 | Agent 待机轮询 inbox 时 | `cli-operations.md#待机模式` |
+| 💤 待机模式 | Agent 待机时 | `cli-operations.md#待机模式` |
 | 🔧 COO 审计 | 每次文档改动后 | `valveos-audit skill` |
 
 ---
@@ -170,7 +170,7 @@ AGENTS.md 的章节分为两类，遵循不同的设计模式：
 |--------|----------|
 | 架构速查 | SYSTEM-MANIFEST.md#Agents |
 | 单会话模式 | coo/instructions.md#单会话模式 |
-| 待机模式 | cli-operations.md#待机模式 |
+| 待机模式 | cli-operations.md#待机模式（状态标记+断点续传） |
 | 操作指引 | 多目标子路由表 |
 | 错误恢复 | 按错误类型分发 |
 | 审计触发 | valveos-audit skill |

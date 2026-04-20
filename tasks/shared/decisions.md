@@ -107,3 +107,41 @@
 2. 编写 instructions 时主要关注正常流程，对异常路径覆盖不足
 3. Planner/Coordinator/Worker 因为主流程高频使用，经过更多迭代自然补全了边界处理
 **修复方案**: 为 4 个 Agent 各补充"无消息时/失败时/异常时"三个维度的边界条件，格式统一
+
+---
+
+### [2026-04-21 01:00] 为什么需要角色切换协议（Rehearsal 1 发现）
+
+**选择**: 用户说"唤醒 [Agent名]"时，AI 立即切换到该 Agent 角色执行
+**否决**: 写入 inbox 等待下次会话
+**原因**:
+1. Rehearsal 1 实测：用户说"唤醒 Planner"后，AI 仍然以根 Agent 身份对话，没有变成 Planner
+2. 根因：AGENTS.md 和 instructions.md 没有定义"当用户说唤醒 X 时，AI 应立即切换角色"的协议
+3. 没有角色切换，多 Agent 系统无法运转——用户永远在和调度器说话，Agent 永远不会被真正激活
+4. 铁门协议补充：用户直接唤醒时不需要 inbox 中转（inbox 用于 Agent 间异步通知）
+**类比**: 操作系统的 exec()——进程直接替换，不是 fork()+wait()
+
+---
+
+### [2026-04-21 01:00] 为什么废除轮询待机模式（Rehearsal 1 发现）
+
+**选择**: 待机 = 状态标记 + 断点续传（无后台进程）
+**否决**: Start-Sleep 轮询 inbox
+**原因**:
+1. Rehearsal 1 实测：Agent 用 Start-Sleep 尝试轮询，但 sleep 结束后 AI 不会自动醒来
+2. 根因：文档驱动的 AI 系统没有后台进程能力。AI 会话是一次性的，不是持久进程
+3. Start-Sleep 在 AI 上下文中只是"暂停然后结束"，不是"暂停然后继续"
+4. while 循环更糟——被超时杀掉后 Agent 会话异常，上下文浪费
+**影响范围**: cli-operations.md + 3 个 instructions.md（coordinator/workers/pr-manager）+ ARCHITECTURE.md + SYSTEM-MANIFEST.md + multi-agent-user-guide.md
+
+---
+
+### [2026-04-21 01:00] 为什么斜杠命令日志必须强制写入（Rehearsal 1 发现）
+
+**选择**: 在协议流程第 6 步添加显式写入要求 + 格式模板 + 铁律标记
+**否决**: 仅声明"执行完毕后追加到日志"
+**原因**:
+1. Rehearsal 1 实测：用户执行了 /help、/status、/log，但 system-commands.log 仍为空
+2. 根因：协议只说了"记录"，AI 没有主动执行写入操作
+3. AI 对"记录"的理解是"在回复中提到"，不是"写入文件"
+4. 必须用显式的格式模板 + 铁律标记消除歧义

@@ -96,96 +96,29 @@
 
 ## 待机模式
 
-Agent 可以在用户唤醒后进入**待机轮询**，主动监听 inbox 而非等待手动唤醒。
+Agent 完成工作后标记为"待机"，下次被唤醒时从断点续传。**不存在后台轮询**——AI 会话是一次性的。
 
-### 待机模式类型总览
+### 定义
 
-| 类型 | 使用者 | 等待内容 | Inbox 文件 | 用户触发命令 |
-|------|--------|----------|------------|-------------|
-| **Coordinator Inbox 待机** | Coordinator | Planner 完成消息 | `inbox/coordinator.md` | "待机模式，等 Planner 消息" |
-| **Worker Dispatch 待机** | Worker | Coordinator 分配的任务 | `coordinator/assignments.md` | "待机模式，等任务分配" |
-| **PR Manager Inbox 待机** | PR Manager | Worker 完成消息 | `inbox/pr-manager.md` | "待机模式，等 Worker 消息" |
-
-### 触发
-
-用户唤醒 Agent 时附加指令："待机模式，等 [来源Agent] 消息"
-
-### 级联待机（推荐用法）
-
-不需要一口气开所有 Agent。每步只开紧邻下游：
-
-```
-1. 开 Planner(工作) + Coordinator(待机)    ← 2个终端
-   Planner 完成 → Coordinator 自动开始
-2. 开 Worker(待机)                          ← 3个终端
-   Coordinator 完成 → Worker 自动开始
-3. 开 PR Manager(待机)                      ← 3个终端
-   Worker 完成 → PR Manager 自动开始
-```
-
-Agent 完成工作后终端自动空出，所以同时最多占 2-3 个终端。
-
-### 待机建议
-
-Agent 完成后，在输出中附带待机建议，帮助用户决定下一步开谁待机：
-
-```
-请唤醒 Worker-001（待机）。预计需要 1 个 Worker。
-```
+- **待机** = Agent 在 agent-status.md 中标记为"待机"，不执行任何后台进程
+- **唤醒** = 用户在新会话中说"唤醒 [Agent名]"，AI 读取 instructions + inbox + status，从断点续传
+- **轮询** = 不存在。AI 会话没有后台轮询能力。
 
 ### 工作流
 
-```
-1. 更新 agent-status → "待机(等XXX消息)"
-2. 执行: Start-Sleep -Seconds 300
-3. 醒来后检查: Select-String -Path $inboxPath -Pattern '未读' -Quiet
-4. 有消息 → 标记已读 → 开始工作
-5. 无消息 → 回到步骤 2
-```
+1. 完成当前工作后，更新 `tasks/shared/agent-status.md` 状态为"待机"
+2. 输出"请唤醒 [下一个Agent]" + 原因
+3. 会话结束。Agent 不执行任何后台操作。
+4. 下次用户唤醒该 Agent 时，AI 读取 inbox + agent-status → 从断点续传
 
-### 待机命令
+### ⚠️ 已废弃：轮询待机
 
-```powershell
-Start-Sleep -Seconds 300
-```
+以下轮询方式已被证明不可行（AI 会话不是持久进程，Start-Sleep 结束后不会自动醒来）：
+- ~~Start-Sleep 轮询~~
+- ~~while 循环轮询~~
+- ~~前台/后台轮询~~
 
-### 检查命令
-
-```powershell
-$inboxPath = "项目路径/tasks/shared/inbox/[自己的角色].md"
-Select-String -Path $inboxPath -Pattern '未读' -Quiet
-```
-
-返回 `True` = 有未读消息，返回 `False` = 无消息。
-
-### 超时恢复
-
-如果 Trae 超时杀掉了 sleep 命令：
-- 用户重新唤醒 Agent
-- Agent 读取 inbox → 有消息就工作，没消息就继续待机
-- 天然幂等，无需特殊恢复逻辑
-
-### ⚠️ 不要用 while 循环
-
-```powershell
-# ❌ 错误 — 被杀后恢复困难，上下文浪费
-while ($true) { ... Start-Sleep ... }
-
-# ✅ 正确 — 单次 sleep，Agent 自主决定是否重调用
-Start-Sleep -Seconds 300
-```
-
-原因：
-1. while 循环被超时杀掉后，Agent 会话可能异常
-2. 循环日志持续消耗上下文窗口
-3. Agent 在循环期间无 AI 控制权，无法做决策
-
-### 安全规则
-
-1. **聊天会话数量** — 取决于 Trae IDE 能同时开多少个聊天窗口，每个待机 Agent 占一个
-2. **只待机紧邻下游** — 不需要全部待机
-3. **待机前更新 agent-status** — 状态改为"待机(等XXX消息)"
-4. **检测到消息后立即标记已读** — 防止重复触发
+**不要使用任何形式的轮询。**
 
 ---
 

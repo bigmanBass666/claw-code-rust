@@ -360,51 +360,25 @@ PR 合并后，将待清理的 feat/ 分支写入 `tasks/housekeeper/cleanup-que
 
 ## 待机模式
 
-PR Manager 可以待机等待 Worker 的完工通知。
+PR Manager 完成工作后标记为"待机"，下次被唤醒时从断点续传。**不存在后台轮询**——AI 会话是一次性的。
 
-### 触发方式
+### 定义
 
-用户唤醒 PR Manager 时附加指令："待机模式，等 Worker 消息"
+- **待机** = 在 agent-status.md 中标记为"待机"，不执行任何后台进程
+- **唤醒** = 用户在新会话中说"唤醒 PR Manager"，AI 读取 instructions + inbox + status，从断点续传
+- **轮询** = 不存在。AI 会话没有后台轮询能力。
 
 ### 工作流
 
-1. 更新 `tasks/shared/agent-status.md` 状态为"待机(等Worker完工)"
-2. 执行轮询等待：
-   ```powershell
-   Start-Sleep -Seconds 300
-   $hasMessage = Select-String -Path "tasks/shared/inbox/pr-manager.md" -Pattern '未读' -Quiet
-   ```
+1. 完成当前工作后，更新 `tasks/shared/agent-status.md` 状态为"待机"
+2. 输出"请唤醒 [下一个Agent]" + 原因
+3. 会话结束。不执行任何后台操作。
+4. 下次用户唤醒 PR Manager 时，AI 读取 inbox + pr-queue → 从断点续传
 
-### ⚠️ 不要用 while 循环
+### ⚠️ 已废弃：轮询待机
 
-```powershell
-# ❌ 错误 — 被杀后恢复困难，上下文浪费
-while ($true) { ... Start-Sleep ... }
+以下方式已被证明不可行（AI 会话不是持久进程，Start-Sleep 结束后不会自动醒来）：
+- ~~Start-Sleep 轮询~~
+- ~~while 循环轮询~~
 
-# ✅ 正确 — 单次 sleep，Agent 自主决定是否重调用
-Start-Sleep -Seconds 300
-```
-
-原因：
-1. while 循环被超时杀掉后，Agent 会话可能异常
-2. 循环日志持续消耗上下文窗口
-3. Agent 在循环期间无 AI 控制权，无法做决策
-
-3. 检测到未读消息 → 标记为已处理 → 读取消息 → 开始工作
-4. 无消息 → 继续等待
-
-### 与其他待机模式的区别
-
-| | Coordinator inbox 待机 | Worker 分配表待机 | PR Manager inbox 待机 |
-|---|---|---|---|
-| 轮询目标 | inbox/coordinator.md | assignments.md | inbox/pr-manager.md |
-| 触发条件 | 任意未读消息 | 就绪标记 + 自己的 Worker ID | 任意未读消息 |
-| 上游来源 | Planner | Coordinator | Worker |
-| 典型用途 | 等 Planner 任务下发 | 等 Coordinator 任务分配 | 等 Worker 完工通知 |
-
-### 超时恢复
-
-如果 Trae 超时杀掉了 sleep 命令：
-- 用户重新唤醒 PR Manager
-- PR Manager 读取 inbox → 有消息就工作，没消息就继续待机
-- 天然幂等，无需特殊恢复逻辑
+**不要使用任何形式的轮询。**

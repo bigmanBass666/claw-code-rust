@@ -58,7 +58,7 @@
 | **唤醒** | 你打开特定 Agent 的会话 |
 | **睁眼** | 被唤醒的 Agent 主动读取自己的 inbox |
 | **声音** | Agent 写入共享文件的消息 |
-| **待机** | Agent 被唤醒但未收到消息，轮询等待中 |
+| **待机** | Agent 完成工作后标记状态，等待下次唤醒时断点续传 |
 
 > 完整定义 → [ARCHITECTURE.md#核心概念](./ARCHITECTURE.md)
 
@@ -95,13 +95,15 @@
 
 ---
 
-## 待机模式（3 种）
+## 待机模式
 
-| 类型 | 谁 | 等什么 | 怎么触发 |
-|------|-----|--------|----------|
-| Coordinator inbox 待机 | Coordinator | inbox 有新消息 | 唤醒后无消息时自动进入 |
-| Worker 分配表待机 | Worker | assignments.md 有新任务 | 唤醒后无任务时自动进入 |
-| PR Manager inbox 待机 | PR Manager | inbox 有新 PR 任务 | 唤醒后无任务时自动进入 |
+Agent 完成工作后标记为"待机"，下次被唤醒时从断点续传。**不存在后台轮询**——AI 会话是一次性的。
+
+| 概念 | 说明 |
+|------|------|
+| 待机 | Agent 在 agent-status.md 中标记为"待机"，不执行任何后台进程 |
+| 唤醒 | 用户在新会话中说"唤醒 [Agent名]"，AI 读取 instructions + inbox + status，从断点续传 |
+| 轮询 | 不存在。AI 会话没有后台轮询能力。 |
 
 详细说明 → [cli-operations.md#待机模式](../docs/agent-rules/cli-operations.md#待机模式)
 

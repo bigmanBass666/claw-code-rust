@@ -9,8 +9,8 @@
 
 | Agent | 最近活跃 | 当前状态 | 等待唤醒 |
 |-------|----------|----------|----------|
-| Planner | 2026-04-20T16:00:00Z | 沉睡 | Coordinator |
-| Coordinator | 2026-04-21T00:00:00Z | 待机(等Planner消息) | - |
+| Planner | 2026-04-21T02:35:00Z | 沉睡 | — |
+| Coordinator | - | 未启动 | Planner |
 | Worker-001 | - | 未启动 | Coordinator |
 | Worker-002 | - | 未启动 | Coordinator |
 | Worker-003 | - | 未启动 | Coordinator |

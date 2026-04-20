@@ -225,7 +225,7 @@ origin (bigmanBass666/claw-code-rust)  ← 你的 fork
 | 唤醒 | 用户打开特定Agent的会话 |
 | 睁眼 | 被唤醒的Agent主动读取自己的inbox消息 |
 | 声音 | Agent写入共享文件的消息 |
-| 待机 | Agent被唤醒但未收到消息，轮询等待中 |
+| 待机 | Agent 完成工作后标记状态，等待下次唤醒时断点续传 |
 
 ### 消息收件箱结构
 
