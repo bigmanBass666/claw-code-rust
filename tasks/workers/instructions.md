@@ -411,6 +411,11 @@ Worker 被唤醒后，**必须**在以下时刻更新 `tasks/workers/status.md` 
 | 任务里程碑时 | 更新心跳 = $NOW |
 | 完成任务时 | 更新心跳 = $NOW |
 
+> ⚠️ **强制：唤醒时必须更新心跳**
+> 即使无待认领任务、无任何操作要执行，Worker 被唤醒时**必须**更新 `tasks/workers/status.md` 的"最新心跳"列。
+> 这不是可选的——心跳是 Coordinator 判断你是否存活的基础依据。
+> 无任务时更新格式：`[时间] [Worker-XXX] [HEARTBEAT] 唤醒检查完成（无待认领任务）`
+
 ⚠️ **心跳时间戳必须使用 $NOW 变量**（唤醒时通过 `Get-Date -Format "yyyy-MM-dd HH:mm:ss"` 获取），禁止编造。
 
 心跳用途：Coordinator 唤醒时检查心跳判断 Worker 是否卡住（30 分钟无心跳 = 疑似卡住）。
