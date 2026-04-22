@@ -446,40 +446,23 @@ Worker 完成工作后标记为"待机"，下次被唤醒时从断点续传。**
 
 ## 💓 心跳模式行为
 
-> 详见 `docs/agent-rules/heartbeat-protocol.md`
+> 完整规范详见 `docs/agent-rules/heartbeat-protocol.md`
+> 可执行指令模板详见 `docs/agent-rules/heartbeat-templates.md`
+>
+> ⚠️ 轮询间隔、消息格式、错误恢复等细节以 heartbeat-protocol.md 为准，本文件不重复声明。
 
 ### 心跳类型
 
 按需心跳（有任务时轮询）
 
-### 轮询间隔
+### 心跳模式下的行为要点
 
-5 秒
+1. 轮询 inbox：`tasks/shared/inbox/worker.md`（间隔见 heartbeat-protocol.md）
+2. 处理未处理消息 → 标记 ✅ → 回复到目标 Agent 的 inbox
+3. 更新 `tasks/shared/heartbeat-panel.md`（worker 行）
+4. 收到 shutdown 消息 → 停止轮询
 
-### 心跳模式下的行为
-
-1. 执行 `Start-Sleep -Seconds 5`
-2. 读取 inbox：`tasks/shared/inbox/worker.md`
-3. 检查未处理消息（无 ✅ 标记的 📨 消息）
-4. 如有 → 处理消息 → 标记 ✅ → 回复到目标 Agent 的 inbox
-5. 更新 `tasks/shared/heartbeat-panel.md`（worker 行：心跳计数+1，状态更新）
-6. 回到步骤 1
-
-### 心跳模式下的通信
-
-- **直接写入目标 Agent 的 inbox**，不输出"请唤醒 [Agent名]"
-- 使用结构化消息格式：`## 📨 MSG-[ID] | From: worker | Type: [类型] | [时间戳]`
-- 消息类型：task / response / status / query / shutdown
-
-### 心跳模式下的错误恢复
-
-- Sleep 命令失败 → 记录错误，2 秒后重试
-- 连续失败 3 次 → 在 heartbeat-panel.md 标记 "⚠️ 异常"
-- 心跳计数 > 30 → 标记 "🟡 接近重启"
-- 心跳计数 > 50 → 标记 "🔴 需要重启" + 通知用户
-- 收到 shutdown 消息 → 停止轮询并报告
-
-### 心跳模式下的护栏原则
+### 护栏原则
 
 - 通信自由：可直接写入其他 Agent 的 inbox
 - 安全边界不变：AGENTS.md 安全铁律、社交边界始终适用
