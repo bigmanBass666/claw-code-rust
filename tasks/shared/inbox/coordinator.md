@@ -19,22 +19,22 @@
 
 ## 📨 新格式消息区
 
-> ⚠️ 测试用途：以下为心跳协议 v0.5.0 用户中断验证测试（空inbox，正常轮询）
+> ⚠️ 测试用途：以下为心跳协议 v0.5.0 多Agent协作验证测试
 
-## 📨 MSG-003 | From: 用户/COO | Type: shutdown | 2026-04-23 11:00:00Z
+## 📨 MSG-004 | From: Planner | Type: task | 2026-04-23 12:00:00Z
 
-**信号**: SHUTDOWN
+**任务**: TASK-TEST-004 多Agent协作验证
 
-**内容**:
-心跳协议 Test #7 — Shutdown 信号验证。
-请立即停止轮询，更新心跳面板状态为 🌙 Dormant，并报告已收到关闭信号。
+**描述**:
+Test #9 验证任务：Coordinator 识别到此任务后，应拆分并分配给 Worker。
 
 **要求**:
-1. 识别此消息类型为 `shutdown`
-2. **立即停止轮询**（不继续执行 Sleep→Read 循环）
-3. 更新 heartbeat-panel.md：Coordinator 状态改为 🌙 Dormant
-4. 输出关闭确认报告
-
-✅ 已处理 | 2026-04-23 11:14:01Z
+1. 识别此消息为未处理状态（无 ✅ 标记）
+2. 获取 $NOW = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+3. 将任务拆分为子任务
+4. **分配给 Worker**（写入 tasks/shared/inbox/worker.md，追加到待处理消息表格）
+5. 在此消息头部添加 ✅ 标记
+6. 更新 heartbeat-panel.md
+7. 继续轮询
 
 ---
