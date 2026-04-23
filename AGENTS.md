@@ -19,6 +19,8 @@
 - 重置前必须二次确认
 - **永不执行 `git init`**（会覆盖已有的 .git 历史，导致所有提交记录丢失）
 - **`.git` 目录丢失时，从远程 clone 恢复**：先 `git clone [fork-url] [临时目录]`，再 `Copy-Item [临时目录]/.git [原仓库]/.git`
+>
+> 📋 **元数据唯一来源**：`tasks/SYSTEM-MANIFEST.md`。修改 Agent 清单/职责/文件映射等元数据时必须同步更新该文件。
 
 ## 📝 提交纪律
 

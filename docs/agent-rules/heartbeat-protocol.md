@@ -6,6 +6,7 @@
 >
 > ⚠️ **本文件定义 ValveOS 心跳模式下的通信与行为规范。**
 > 心跳模式是 ValveOS 的增强模式，允许 Agent 自主轮询 inbox 并直接通信。
+> ⚠️ **修改本文件后**：搜索 `heartbeat-protocol` 在 `valveos-protocol.md`、`SYSTEM-MANIFEST.md`、`ARCHITECTURE.md` 中的出现，确认引用同步更新。
 > 非心跳模式下，铁门协议仍适用（详见 valveos-protocol.md）。
 
 ---
