@@ -16,9 +16,9 @@
 
 | Agent | 状态 | 心跳计数 | 最后活跃时间 | 备注 |
 |-------|------|---------|-------------|------|
-| Coordinator | 💓 Heartbeat | 7 | 2026-04-23 12:23:39 | 无新消息 |
-| Worker | 💤 Standby | 4 | 2026-04-23 12:15:22 | 无新消息 |
-| Planner | 💤 Standby | 4 | 2026-04-23 13:07:19 | 无新消息，ITERATION-12 待 Coordinator 分配 |
+| Coordinator | 💓 Heartbeat | 0 | — | 等待第一轮心跳（MSG-005 ITER12待处理） |
+| Worker | 💓 Heartbeat | 0 | — | 等待第一轮心跳 |
+| Planner | 🌙 Dormant | 0 | — | Test #10已完成，ITER12已下发 |
 | PR Manager | 🌙 Dormant | 0 | — | — |
 | Maintainer | 🌙 Dormant | 0 | — | — |
 | Housekeeper | 🌙 Dormant | 0 | — | — |
