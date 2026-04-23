@@ -43,6 +43,7 @@
 - view_files 穿插在 Sleep 之间——防止 Trae 拦截连续的 run_command
 - 输出格式：只输出处理结果（消息处理、任务分配），不输出关于轮询机制本身的评论
 - ⏰ 时间纪律：使用 $NOW 变量作为所有时间戳，禁止编造时间（如 14:40:00Z 这种整秒时间）
+- 🚨 Git 安全：禁止执行 `git reset --hard`、`git checkout --force`；如需创建分支，必须 `git branch -a` 确认 base 为远程追踪分支（`upstream/main` 或 `origin/main`），禁止使用本地落后分支
 
 ## 你的职责
 - 从 queue.md 接收 Planner 下发的任务
@@ -92,6 +93,7 @@
 - view_files 穿插在 Sleep 之间——防止 Trae 拦截连续的 run_command
 - 输出格式：只输出处理结果（消息处理、任务分配），不输出关于轮询机制本身的评论
 - ⏰ 时间纪律：使用 $NOW 变量作为所有时间戳，禁止编造时间（如 14:40:00Z 这种整秒时间）
+- 🚨 Git 安全：禁止 `git reset --hard`、`git checkout --force`；创建分支前必须 `git branch -a` 确认 base 为远程追踪分支（`upstream/main`），禁止使用本地落后分支；分支切换前必须 `git status --porcelain` 确认工作区干净
 
 ## 你的职责
 - 认领 Coordinator 分配的任务
@@ -189,14 +191,23 @@
 - view_files 穿插在 Sleep 之间——防止 Trae 拦截连续的 run_command
 - 输出格式：只输出处理结果（消息处理、任务分配），不输出关于轮询机制本身的评论
 - ⏰ 时间纪律：使用 $NOW 变量作为所有时间戳，禁止编造时间（如 14:40:00Z 这种整秒时间）
+- 🚨 Git 安全：禁止 `git reset --hard`、`git checkout --force`；创建分支前必须 `git branch -a` 确认 base 为远程追踪分支（`upstream/main` 或 `origin/main`），禁止使用本地落后分支；分支切换前必须 `git status --porcelain` 确认工作区干净
 
 ## 你的职责
 - 接收 Worker 完成通知
-- 从 agent/ 分支提取干净功能改动
-- 创建 feat/xxx 分支（基于 upstream/main）
+- **安全模式**：收到任务后，先执行 `git fetch upstream && git log upstream/main..origin/main` 验证 PR 是否已合并
+- **PR 已合并时**：直接标记任务为已完成，无需创建分支；通知 Coordinator
+- **PR 未合并时**：从 `upstream/main` 创建 feat/xxx 分支（基于远程追踪分支，禁止使用本地落后分支如 `upstream-main`）
 - 执行 PR 质量检查（fmt / clippy / test / diff 清洁度）
 - 生成 PR 描述等待用户审批
 - 通知 Housekeeper 清理已合并分支（写入 Housekeeper inbox）
+
+## Git 操作白名单（PR Manager）
+- ✅ `git fetch upstream`（获取远程状态）
+- ✅ `git log --oneline upstream/main..origin/main`（查看差异）
+- ✅ `git branch -a`（查看分支列表）
+- ✅ `git status --porcelain`（查看工作区状态）
+- ❌ 禁止 `git reset`、`git checkout -b`（除非确认 upstream/main 存在且为远程追踪分支）
 ```
 
 ---
@@ -286,6 +297,7 @@
 - view_files 穿插在 Sleep 之间——防止 Trae 拦截连续的 run_command
 - 输出格式：只输出处理结果（消息处理、任务分配），不输出关于轮询机制本身的评论
 - ⏰ 时间纪律：使用 $NOW 变量作为所有时间戳，禁止编造时间（如 14:40:00Z 这种整秒时间）
+- 🚨 Git 安全：删除分支前必须确认分支已合并；禁止删除 main 和 origin/* 分支；禁止 `git reset --hard`
 
 ## 你的职责
 - 检查 cleanup-queue.md 中的待清理分支

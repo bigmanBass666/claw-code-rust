@@ -64,8 +64,10 @@
 7. **输出只含处理结果**：只输出消息处理、任务分配等结果，不输出关于轮询机制本身的评论
 8. **view_files 穿插在 Sleep 之间**：防止 Trae 拦截连续的 run_command
 9. **时间纪律**（⏰）：写入任何时间戳时必须先执行 `Get-Date -Format "yyyy-MM-dd HH:mm:ss"` 获取真实系统时间，禁止凭感觉编造。详见 `valveos-protocol.md#时间纪律`
+10. **🚨 Git 安全**：严禁 `git reset --hard`、`git checkout --force`、强制删除 `index.lock`；创建分支前必须 `git branch -a` 确认 base 为远程追踪分支（`upstream/main` 或 `origin/main`），禁止使用本地落后分支（如 `upstream-main`）；分支切换前必须 `git status --porcelain` 确认工作区干净
+11. **📋 PR Manager 安全模式**：收到 PR 创建任务后，先执行 `git fetch upstream && git log upstream/main..origin/main` 验证 PR 是否已合并。PR 已合并时直接标记完成，无需创建分支；PR 未合并时使用 `upstream/main` 作为 base 创建 feat 分支（禁止使用本地落后分支）
 
-`---
+---
 
 ## 🔄 Agent 生命周期状态机
 
