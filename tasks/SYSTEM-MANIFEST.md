@@ -133,7 +133,7 @@
 | 🐛 调试方法 | 遇到 bug 时 | `cli-operations.md#调试方法论` |
 | 📂 Git 工作流 | 创建分支 / 提 PR 时 | `git-workflow.md` |
 | 🚨 Git 损坏 | git 命令报错时 | `cli-operations.md#.git损坏应急协议` |
-| 💤 待机模式 | Agent 待机时 | `cli-operations.md#待机模式` |
+| 💤 待机/心跳模式 | Agent 待机或轮询 inbox 时 | `heartbeat-protocol.md`（待机模式已被心跳模式替代，详见 cli-operations.md#待机模式） |
 | 🔧 COO 审计 | 每次文档改动后 | `valveos-audit skill` |
 | 💓 心跳协议 | `/heartbeat` 或粘贴心跳指令 | `heartbeat-protocol.md` |
 | 💓 心跳指令模板 | 启动 Agent 心跳模式 | `heartbeat-templates.md` |
@@ -156,7 +156,7 @@
 | 日志文件列表 | **本 File Registry 或 ARCHITECTURE.md 日志系统图** | 两处应一致，以本文件为准 |
 | Agent 职责详情 | **各自 `instructions.md`** | 本文件只有一句话摘要；ARCHITECTURE.md 有完整版 |
 | 标准开场白 | **ARCHITECTURE.md → 标准开场白章节** ⚠️ | 本文件引用其位置（注：该章节尚待创建，见 audit-log 评估记录） |
-| Git 安全规则 | **AGENTS.md → 提交纪律章节** | 各 instructions.md 可引用但不重复完整规则 |
+| Git 安全规则 | **heartbeat-protocol.md 第 10 条**（含 Worktree 要求）；AGENTS.md 安全铁律作为基础底线 | 各 heartbeat 模板引用；详细规范在 heartbeat-protocol.md |
 | PR 质量铁律 | **AGENTS.md → PR 质量铁律章节** | pr-manager/instructions.md 引用具体条目 |
 | ValveOS 路由条目 | **valveos-protocol.md → 路由表章节** | 其他文件不重复定义路由；本文件 Feature Index 与路由表保持覆盖一致 |
 | 铁门协议 | **valveos-protocol.md → 铁门协议章节** | AGENTS.md 不再包含铁门协议 |

@@ -305,29 +305,35 @@ tasks/shared/iteration-log.md # 迭代日志（断点续传）
 
 ### ✅ 心跳协议验证状态（2026-04-23）
 
-> 9 次测试全部通过，心跳协议**生产就绪**
+> v0.5.0 生产就绪，共 12 次测试迭代（Test #1~#12）
 
-| 测试 | 验证项 | 结果 |
-|------|--------|------|
-| Test #4 | 循环持续性 + Sleep 精确值（240s） | ✅ |
-| Test #5 | 消息识别→处理→标记✅ 全链路 | ✅ |
-| Test #6 | Get-Date 真实时间戳写入 | ✅ |
-| Test #7 | shutdown 信号立即停止轮询 | ✅ |
-| Test #8 | 用户直接中断响应 | ✅ |
-| **Test #9** | **多 Agent 协作（Coordinator→Worker）** | **🏆✅** |
+| 测试 | 验证项 | 结果 | 备注 |
+|------|--------|------|------|
+| Test #4 | 循环持续性 + Sleep 精确值（240s） | ✅ | |
+| Test #5 | 消息识别→处理→标记✅ 全链路 | ⚠️ | 发现时间戳 bug：AI 编造 `14:40:00Z` |
+| Test #6 | Get-Date 真实时间戳写入 | ✅ | 修复 Test #5，时间纪律生效 |
+| Test #7 | shutdown 信号立即停止轮询 | ✅ | |
+| Test #8 | 用户直接中断响应 | ✅ | 平台机制保证 |
+| Test #9 | 多 Agent 协作（Coordinator→Worker） | ✅ | 协作链验证 |
+| Test #10 | Planner 生成任务计划 | ✅ | |
+| Test #11 | P→C→W 端到端协作 | ⚠️ | 发现 inbox scan bug：Worker 漏扫新格式区域 |
+| Test #12 | PR Manager 创建 PR | 🔴 | git reset --hard 事故：Worktree 缺失 |
 
-**关键迭代修复：**
-1. 禁止式措辞 → 引导式措辞（消除 AI 理性抗拒）
-2. Sleep 值加"严格使用此值"约束（消除自行优化）
-3. 步骤 0 Get-Date + ⏰ 时间纪律（消除时间编造）
+**关键迭代修复（heartbeat-full-audit commit）**：
 
-### 醒来协议（每个Agent必须遵守）
+| Bug | 原因 | 修复 |
+|-----|------|------|
+| 时间戳编造（Test #5） | 模板无时间纪律 | 步骤 0 Get-Date + heartbeat-protocol.md 约束 #9 |
+| inbox 漏扫（Test #11） | 步骤 3 只扫旧表格区域 | 扩展为 4 子区域扫描（所有 7 模板） |
+| PR Manager .git 损坏（Test #12） | 1. cli-operations.md 指导危险操作 2. 无 Worktree 要求 | 1. 删除 `git reset --hard origin/main` 2. PR Manager 必须用 Worktree |
+| `git init` 覆盖历史 | AGENTS.md 缺少禁止规则 | 添加"永不 git init"规则 |
 
-**醒来后第一件事**：
-1. 读取 `tasks/shared/inbox/[自己的Agent名].md`
-2. 查看是否有未处理消息
-3. 如有，标记为"已处理"并处理
-4. 根据消息内容，自主判断还需读取哪些相关文件
+**风险接受项**：
+- Worker(400s) vs Coordinator(240s) 轮询间隔不同导致唤醒时间错位 → 接受为 P2，真实工作负载可接受
+
+### 醒来协议（引用 heartbeat-protocol.md）
+
+详见 `docs/agent-rules/heartbeat-protocol.md#心跳轮询循环`。心跳模式下 Agent 执行 Sleep → view_files → Process → Respond → Loop 循环。
 
 ### 完成后协议（每个Agent必须遵守）
 

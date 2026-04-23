@@ -229,15 +229,34 @@ git branch -d agent/worker-001/fix-xxx
 
 ### Worktree 命名规范
 
-| Worker | Worktree 目录 | 分支名 |
-|--------|--------------|--------|
-| Worker-001 | `../claw-code-rust-w001` | `agent/worker-001/<task>` |
-| Worker-002 | `../claw-code-rust-w002` | `agent/worker-002/<task>` |
-| Worker-003 | `../claw-code-rust-w003` | `agent/worker-003/<task>` |
+| Agent | Worktree 目录 | 分支名 | 用途 |
+|-------|--------------|--------|------|
+| Worker-001 | `../claw-code-rust-w001` | `agent/worker-001/<task>` | 代码编写 |
+| Worker-002 | `../claw-code-rust-w002` | `agent/worker-002/<task>` | 代码编写 |
+| Worker-003 | `../claw-code-rust-w003` | `agent/worker-003/<task>` | 代码编写 |
+| **PR Manager** | `../claw-code-rust-pr` | `agent/pr-manager/<task>` | PR 创建与准备 |
+
+### PR Manager Worktree 规范
+
+PR Manager 也必须使用 worktree，禁止在主仓库直接操作 git：
+
+```bash
+# 创建 PR Manager worktree
+git worktree add ../claw-code-rust-pr -b agent/pr-manager/iter12 upstream/main
+
+# 在 worktree 中工作
+cd ../claw-code-rust-pr
+# 执行 PR 准备：创建 feat/xxx 分支、质量检查等
+
+# 完成后清理
+cd ../claw-code-rust
+git worktree remove ../claw-code-rust-pr
+git branch -d agent/pr-manager/iter12
+```
 
 ### 注意事项
 
 - 主仓库永远保持在 main 分支
-- Worker 只在自己的 worktree 中工作
+- **所有涉及 git 写入操作的 Agent（Worker、PR Manager）都必须使用 worktree**
 - Worktree 共享 .git 对象数据库，不需要重新 fetch
-- 协调文件（tasks/）在主仓库中，Worker 通过绝对路径访问
+- 协调文件（tasks/）在主仓库中，Agent 通过绝对路径访问
