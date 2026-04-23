@@ -63,6 +63,7 @@
 6. **每轮从 Sleep 开始**：Sleep 是"等待新消息"的工具，不是无意义的等待
 7. **输出只含处理结果**：只输出消息处理、任务分配等结果，不输出关于轮询机制本身的评论
 8. **view_files 穿插在 Sleep 之间**：防止 Trae 拦截连续的 run_command
+9. **时间纪律**（⏰）：写入任何时间戳时必须先执行 `Get-Date -Format "yyyy-MM-dd HH:mm:ss"` 获取真实系统时间，禁止凭感觉编造。详见 `valveos-protocol.md#时间纪律`
 
 `---
 
