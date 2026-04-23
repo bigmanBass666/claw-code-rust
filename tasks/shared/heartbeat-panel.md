@@ -16,12 +16,14 @@
 
 | Agent | 状态 | 心跳计数 | 最后活跃时间 | 工作区 | 备注 |
 |-------|------|---------|-------------|--------|------|
-| Coordinator | 🌙 Dormant | 0 | — | main | Test #12 已暂停，等待重新运行 |
-| Worker | 🌙 Dormant | 0 | — | main | ITER12-001~004 ✅ 全部完成 |
-| Planner | 🌙 Dormant | 0 | — | main | Test #10已完成，ITER12已下发 |
-| PR Manager | 💓 Heartbeat | 4 | 2026-04-23 22:50:02 | main (⚠️ worktree路径受限) | 无新消息，轮询中 |
-| Maintainer | 🌙 Dormant | 0 | — | main | — |
-| Housekeeper | 🌙 Dormant | 0 | — | main | — |
-| COO | 🌙 Dormant | 0 | — | main | — |
+| Planner | 🌙 Dormant | 0 | — | — | 系统已就绪，等待唤醒 |
+| Coordinator | 🌙 Dormant | 0 | — | — | 系统已就绪，等待唤醒 |
+| Worker | 🌙 Dormant | 0 | — | — | 系统已就绪，等待任务 |
+| PR Manager | 🌙 Dormant | 0 | — | — | 系统已就绪，等待新任务 |
+| Maintainer | 🌙 Dormant | 0 | — | — | 系统已就绪，定期分析待触发 |
+| Housekeeper | 🌙 Dormant | 0 | — | — | ⚠️ 待处理分支清理任务(MRG-HK-001) |
+| COO | 🌙 Dormant | 0 | — | — | 系统已就绪，等待用户唤醒 |
 
 > 💡 工作区列：标识每个 Agent 当前所在的 git 工作位置（main 分支或 worktree 目录）
+> 📋 ITER12 已归档至 `tasks/logs/iteration-12-archive-2026-04-23.md`
+> 🚀 系统已重置，所有 Agent 待机中
