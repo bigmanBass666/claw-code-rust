@@ -19,7 +19,7 @@
 | Coordinator | 🌙 Dormant | 0 | — | main | Test #12 已暂停，等待重新运行 |
 | Worker | 🌙 Dormant | 0 | — | main | ITER12-001~004 ✅ 全部完成 |
 | Planner | 🌙 Dormant | 0 | — | main | Test #10已完成，ITER12已下发 |
-| PR Manager | 🌙 Dormant | 0 | — | — | Test #12 等待重新运行（已修复 Git 安全约束 + Worktree 要求） |
+| PR Manager | 💓 Heartbeat | 2 | 2026-04-23 21:52:35 | worktree/D:/Test/claw-code-rust-pr | ✅ ITER12 PR#31,32,33 已验证合并 |
 | Maintainer | 🌙 Dormant | 0 | — | main | — |
 | Housekeeper | 🌙 Dormant | 0 | — | main | — |
 | COO | 🌙 Dormant | 0 | — | main | — |

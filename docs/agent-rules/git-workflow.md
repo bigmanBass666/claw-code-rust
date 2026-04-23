@@ -234,15 +234,15 @@ git branch -d agent/worker-001/fix-xxx
 | Worker-001 | `../claw-code-rust-w001` | `agent/worker-001/<task>` | 代码编写 |
 | Worker-002 | `../claw-code-rust-w002` | `agent/worker-002/<task>` | 代码编写 |
 | Worker-003 | `../claw-code-rust-w003` | `agent/worker-003/<task>` | 代码编写 |
-| **PR Manager** | `../claw-code-rust-pr` | `agent/pr-manager/<task>` | PR 创建与准备 |
+| **PR Manager** | `./worktrees/pr-manager` | `agent/pr-manager/<task>` | PR 创建与准备 |
 
 ### PR Manager Worktree 规范
 
 PR Manager 也必须使用 worktree，禁止在主仓库直接操作 git：
 
 ```bash
-# 创建 PR Manager worktree
-git worktree add ../claw-code-rust-pr -b agent/pr-manager/iter12 upstream/main
+# 创建 PR Manager worktree（项目目录内）
+git worktree add ./worktrees/pr-manager -b agent/pr-manager/iter12 upstream/main
 
 # 在 worktree 中工作
 cd ../claw-code-rust-pr

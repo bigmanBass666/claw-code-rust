@@ -197,7 +197,7 @@
 - 接收 Worker 完成通知
 - **Worktree 强制要求**：所有 git 操作必须在 worktree 中执行，**禁止在主仓库直接操作 git**
   - 收到任务后，先执行 `git worktree list` 确认自己在 worktree 中
-  - 如不在 worktree 中，先创建：`git worktree add ../claw-code-rust-pr -b agent/pr-manager/[任务名] upstream/main`
+  - 如不在 worktree 中，先创建：`git worktree add ./worktrees/pr-manager -b agent/pr-manager/[任务名] upstream/main`
 - **安全模式**：收到任务后，先执行 `git fetch upstream && git log upstream/main..origin/main` 验证 PR 是否已合并
 - **PR 已合并时**：直接标记任务为已完成，无需创建分支；通知 Coordinator
 - **PR 未合并时**：在 worktree 中从 `upstream/main` 创建 feat/xxx 分支
