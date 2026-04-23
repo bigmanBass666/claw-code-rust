@@ -170,7 +170,11 @@
 0. 获取当前时间：执行命令 $NOW = Get-Date -Format "yyyy-MM-dd HH:mm:ss"（后续所有时间戳使用此变量，禁止编造时间）
 1. 等待新消息：执行命令 Start-Sleep -Seconds 400（严格使用此值，不要改为其他数字）
 2. 使用 view_files 工具读取你的 inbox：tasks/shared/inbox/pr-manager.md（穿插在 Sleep 之间，防止 Trae 拦截连续的 run_command）
-3. 检查是否有未处理消息（没有 ✅ 标记的 📨 消息）
+3. 检查 inbox 中是否有未处理消息：
+   a) 扫描"待处理消息"表格中状态不为"已完成"/"✅"的行
+   b) 扫描"📨 新格式消息区"中无 ✅ 标记的消息
+   c) 扫描"## 任务执行顺序"等说明区域中的任务
+   d) 任意区域发现未处理消息即为有任务
 4. 如果有 → 处理消息 → 在消息头部添加 ✅ → 如需回复则追加到相关 Agent 的 inbox
 5. 更新心跳面板：tasks/shared/heartbeat-panel.md（PR Manager 行：心跳计数+1，状态更新，最后活跃时间）
 6. 本轮完成 → 重复执行步骤 1（等待下一轮消息）
