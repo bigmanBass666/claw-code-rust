@@ -17,7 +17,7 @@
 | Agent | 状态 | 心跳计数 | 最后活跃时间 | 备注 |
 |-------|------|---------|-------------|------|
 | Coordinator | 💓 Heartbeat | 1 | 2026-04-23 14:11:50 | 处理 MSG-004 + MSG-005；已分配 ITER12 任务给 Worker |
-| Worker | ⚡ Working | 0 | 2026-04-23 14:11:50 | ITER12-001~004 已分配，等待执行 |
+| Worker | ⚡ Working | 1 | 2026-04-23 14:53:40 | ITER12-001 ✅ 已完成；ITER12-002~004 待处理 |
 | Planner | 🌙 Dormant | 0 | — | Test #10已完成，ITER12已下发 |
 | PR Manager | 🌙 Dormant | 0 | — | — |
 | Maintainer | 🌙 Dormant | 0 | — | — |
